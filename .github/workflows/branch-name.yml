@@ -1,3 +1,8 @@
+# ============================================================
+# Valida o nome da branch de todo Pull Request para a main.
+# Padrão: tipo/descricao-em-minusculas-com-hifen
+# Veja docs/CONTRIBUTING.md
+# ============================================================
 name: Branch Naming Convention
 
 on:
@@ -10,18 +15,23 @@ permissions:
 
 jobs:
   validate-branch-name:
+    # Também vai virar check obrigatório na main
     name: Validate Branch Name
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
       - name: Check branch name
+        # SEGURANÇA: o nome da branch vai para uma variável de ambiente.
+        # Nunca escreva ${{ github.head_ref }} direto dentro do script: alguém
+        # poderia criar uma branch com comandos no nome e executá-los aqui.
         env:
           BRANCH_NAME: ${{ github.head_ref }}
         run: |
+          # Tipos permitidos / nome em minúsculas, números e hífens
           PATTERN='^(feat|fix|refactor|test|docs|ci|chore)/[a-z0-9]+(-[a-z0-9]+)*$'
 
-          # Branches de ferramentas (ex.: Dependabot) não precisam seguir o padrão
+          # Branches criadas por ferramentas (Dependabot) não precisam seguir o padrão
           if [[ "$BRANCH_NAME" == dependabot/* ]]; then
             echo "Branch de ferramenta: $BRANCH_NAME (validação ignorada)"
             exit 0

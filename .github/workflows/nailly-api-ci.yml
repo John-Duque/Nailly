@@ -1,43 +1,63 @@
+# ============================================================
+# Pipeline de CI da API (nailly-api)
+# Roda o build, os testes e a análise de qualidade no Sonar.
+# ============================================================
 name: Nailly API CI
 
+# QUANDO o pipeline roda
 on:
+  # Quando entra código na main, mas só se algo da API (ou deste arquivo) mudou
   push:
     branches: [main]
     paths:
       - "nailly-api/**"
       - ".github/workflows/nailly-api-ci.yml"
+  # Em todo Pull Request. Sem filtro de pastas de propósito: se o check for
+  # obrigatório na main, um PR só de documentação não pode ficar travado.
   pull_request:
     types: [opened, synchronize, reopened]
+  # Permite rodar manualmente pela aba Actions do GitHub
   workflow_dispatch:
 
+# Permissões mínimas do token do GitHub (princípio do menor privilégio)
 permissions:
   contents: read
   pull-requests: read
 
+# Se você der dois pushes seguidos no mesmo PR, cancela a execução antiga.
+# Na main nunca cancela, para todo commit receber a sua análise.
 concurrency:
   group: nailly-api-ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-and-analyze:
+    # Este nome é o que vamos exigir como check obrigatório na main. Não mude depois.
     name: Build, testes e Sonar
     runs-on: ubuntu-latest
+    # Derruba a execução se travar, para não gastar minutos de CI à toa
     timeout-minutes: 15
     env:
+      # Token do Sonar guardado em Settings > Secrets and variables > Actions
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+    # Todos os comandos "run" abaixo rodam dentro da pasta do serviço
     defaults:
       run:
         working-directory: nailly-api
 
     steps:
+      # 1) Baixa o código do repositório.
+      # fetch-depth: 0 baixa o histórico completo; o Sonar usa isso para saber o que é código novo.
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # o Sonar precisa do histórico completo
+          fetch-depth: 0
 
+      # 2) Instala dois Javas.
       # Java 21 é exigido pelo scanner do Sonar; Java 17 compila e testa o projeto.
-      # O último JDK listado vira o JAVA_HOME padrão (17); o scan usa JAVA_HOME_21_X64.
+      # O último da lista vira o padrão (17); o Sonar usa o JAVA_HOME_21_X64.
+      # cache: maven guarda as dependências baixadas para as próximas execuções ficarem rápidas.
       - name: Configurar JDKs (21 para o Sonar, 17 para o build)
         uses: actions/setup-java@v5
         with:
@@ -47,6 +67,7 @@ jobs:
             17
           cache: maven
 
+      # 3) Guarda os pacotes do scanner do Sonar para não baixar toda vez
       - name: Cache do Sonar
         uses: actions/cache@v4
         with:
@@ -54,9 +75,12 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      # 4) Compila, roda os testes e gera o relatório de cobertura (JaCoCo).
+      # Usa ./mvnw (o Maven do projeto) para a versão ser igual à da sua máquina.
       - name: Build e testes (com cobertura JaCoCo)
         run: ./mvnw -B verify
 
+      # 5) Se o build falhar, guarda os relatórios de teste para você baixar e investigar
       - name: Guardar relatórios de teste (só se falhar)
         if: failure()
         uses: actions/upload-artifact@v4
@@ -65,8 +89,11 @@ jobs:
           path: nailly-api/target/surefire-reports
           if-no-files-found: ignore
 
+      # 6) Envia o código e a cobertura para o Sonar.
+      # Só roda se o token existir (forks e PRs do Dependabot não recebem secrets).
+      # sonar.qualitygate.wait=true faz o passo FALHAR se o Quality Gate reprovar;
+      # é isso que bloqueia o merge de código ruim.
       - name: Análise Sonar
-        # Só roda se o token existir (não existe em forks nem em PRs do Dependabot)
         if: ${{ env.SONAR_TOKEN != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
