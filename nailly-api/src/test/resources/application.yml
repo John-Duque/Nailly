@@ -1,9 +1,16 @@
+# Configuração usada SOMENTE nos testes.
+# Como tem o mesmo nome do application.yml de src/main/resources,
+# durante os testes este arquivo substitui o principal por completo.
 spring:
   datasource:
+    # H2: banco em memória que some quando o teste termina.
+    # MODE=MySQL deixa o H2 parecido com o MySQL real.
     url: jdbc:h2:mem:testdb;MODE=MySQL
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
+      # Cria as tabelas a partir das entidades ao iniciar e apaga ao terminar
       ddl-auto: create-drop
   flyway:
+    # Desligado nos testes: as migrations serão escritas para o MySQL
     enabled: false

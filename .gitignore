@@ -1,5 +1,10 @@
+# IDEs
 .idea/
 .vscode/
 *.iml
+
+# Segredos locais (nunca versionar)
 .env
+
+# macOS
 .DS_Store
