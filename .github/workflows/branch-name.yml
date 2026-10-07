@@ -1,0 +1,40 @@
+name: Branch Naming Convention
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-branch-name:
+    name: Validate Branch Name
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check branch name
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          PATTERN='^(feat|fix|refactor|test|docs|ci|chore)/[a-z0-9]+(-[a-z0-9]+)*$'
+
+          # Branches de ferramentas (ex.: Dependabot) não precisam seguir o padrão
+          if [[ "$BRANCH_NAME" == dependabot/* ]]; then
+            echo "Branch de ferramenta: $BRANCH_NAME (validação ignorada)"
+            exit 0
+          fi
+
+          echo "Branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" =~ $PATTERN ]]; then
+            echo "Nome de branch válido"
+          else
+            echo "Nome de branch fora do padrão: $BRANCH_NAME"
+            echo "Formato: tipo/descricao-em-minusculas-com-hifen"
+            echo "Tipos: feat, fix, refactor, test, docs, ci, chore"
+            echo "Exemplo: feat/cadastro-de-clientes"
+            exit 1
+          fi
