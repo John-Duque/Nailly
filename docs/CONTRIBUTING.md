@@ -1,21 +1,28 @@
 # Guia de contribuição
 
-## Branches
-Formato: `tipo/descricao-curta-em-minusculas-com-hifen`
+## Ambientes e branches
+
+| Branch | Ambiente | Recebe de | Merge |
+|---|---|---|---|
+| `develop` | dev (desenvolvimento) | branches de trabalho (`feat/*`, `fix/*`...) | squash |
+| `staging` | homologação | somente `develop` | merge commit |
+| `main` | produção | somente `staging` (ou `fix/*` em correção urgente) | merge commit |
+
+Promoções entre branches de ambiente usam **merge commit**, nunca squash: o squash cria um commit novo no destino e as históricas passam a divergir, gerando conflitos que não deveriam existir.
+
+## Branches de trabalho
+Saem sempre da `develop`. Formato: `tipo/descricao-em-minusculas-com-hifen`
 
 - `feat/cadastro-de-clientes`
 - `fix/conflito-de-horarios`
 - `ci/workflow-flutter`
-- `chore/setup-inicial`
 
-Nunca fazer commit direto na `main`.
+Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`. Nunca commitar direto em `develop`, `staging` ou `main`.
 
 ## Commits (Conventional Commits)
 Formato: `tipo(escopo): descrição curta`
 
-Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`.
 Escopos (opcionais): `api`, `notification`, `app`, `infra`, `ci`, `docs`.
-
 Regras: tipo em inglês, descrição em português, no imperativo e com até 70 caracteres.
 
 - `feat(api): cria endpoint de agendamento`
@@ -23,18 +30,22 @@ Regras: tipo em inglês, descrição em português, no imperativo e com até 70 
 - `ci: adiciona workflow do app Flutter`
 
 ## Pull Requests
-- O título segue o mesmo padrão dos commits (ele vira a mensagem do commit no squash merge).
-- O merge só acontece com o pipeline "Build, testes e Sonar" verde.
-- Usar squash merge e apagar a branch depois.
+- Título no mesmo padrão dos commits (vira a mensagem do commit no squash)
+- Merge só com os checks `Build, testes e Sonar` e `Validate Branch Name` verdes
+- Branches de trabalho: squash merge e apagar a branch (`gh pr merge --squash --delete-branch`)
+- Promoções: merge commit, sem apagar a branch (`gh pr merge --merge`). Título: `chore: promove develop para staging`
 
-## Fluxo de trabalho
-1. `git checkout main` e `git pull`
+## Fluxo do dia a dia
+1. `git checkout develop` e `git pull`
 2. `git checkout -b feat/nome-da-funcionalidade`
-3. Fazer os commits seguindo o padrão
-4. `git push -u origin feat/nome-da-funcionalidade` e abrir o Pull Request
-5. Esperar o pipeline e o Sonar passarem
-6. Fazer o squash merge e apagar a branch
+3. Commits no padrão e `git push -u origin feat/nome-da-funcionalidade`
+4. `gh pr create --base develop --fill`, esperar os checks e fazer o squash merge
+5. Promover: PR `develop` para `staging` e depois `staging` para `main`
+6. O deploy para `production` espera aprovação manual em Actions > Review deployments
 
-## Regra dos serviços
-O nome da pasta de cada serviço é igual ao `artifactId` do seu `pom.xml`.
-Cada serviço tem pom, pipeline, Dockerfile e projeto no Sonar próprios, e não compartilha código nem banco com os outros.
+## Correção urgente em produção
+1. Sai uma `fix/...` da `main`, entra na `main` por PR (merge commit)
+2. Depois a correção é trazida de volta para `staging` e `develop`
+
+## Regras no GitHub
+Os rulesets (um por branch de ambiente) ficam documentados em `docs/rulesets/`. Eles não fazem parte dos arquivos do repositório: vivem nas configurações do GitHub.
