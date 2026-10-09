@@ -1,50 +1,75 @@
 # ============================================================
-# Valida o nome da branch de todo Pull Request para a main.
-# Padrão: tipo/descricao-em-minusculas-com-hifen
+# Valida o fluxo de branches de todo Pull Request:
+#   feat/*, fix/* etc.  -> develop   (nome no padrão tipo/descricao)
+#   develop             -> staging   (promoção)
+#   staging             -> main      (promoção), ou fix/* (correção urgente)
 # Veja docs/CONTRIBUTING.md
 # ============================================================
 name: Branch Naming Convention
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
-    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+    branches: [develop, staging, main]
 
 permissions:
   contents: read
 
 jobs:
   validate-branch-name:
-    # Também vai virar check obrigatório na main
+    # Este nome é check obrigatório nos rulesets. Não mude.
     name: Validate Branch Name
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
-      - name: Check branch name
-        # SEGURANÇA: o nome da branch vai para uma variável de ambiente.
-        # Nunca escreva ${{ github.head_ref }} direto dentro do script: alguém
-        # poderia criar uma branch com comandos no nome e executá-los aqui.
+      - name: Check branch flow
+        # SEGURANÇA: nomes de branch passam por variáveis de ambiente,
+        # nunca escritos direto dentro do script
         env:
-          BRANCH_NAME: ${{ github.head_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          # Tipos permitidos / nome em minúsculas, números e hífens
-          PATTERN='^(feat|fix|refactor|test|docs|ci|chore)/[a-z0-9]+(-[a-z0-9]+)*$'
+          WORK_PATTERN='^(feat|fix|refactor|test|docs|ci|chore)/[a-z0-9]+(-[a-z0-9]+)*$'
+          FIX_PATTERN='^fix/[a-z0-9]+(-[a-z0-9]+)*$'
 
-          # Branches criadas por ferramentas (Dependabot) não precisam seguir o padrão
-          if [[ "$BRANCH_NAME" == dependabot/* ]]; then
-            echo "Branch de ferramenta: $BRANCH_NAME (validação ignorada)"
+          echo "PR: $HEAD_REF -> $BASE_REF"
+
+          # Branches de ferramentas (ex.: Dependabot) não precisam seguir o padrão
+          if [[ "$HEAD_REF" == dependabot/* ]]; then
+            echo "Branch de ferramenta (validação ignorada)"
             exit 0
           fi
 
-          echo "Branch: $BRANCH_NAME"
-
-          if [[ "$BRANCH_NAME" =~ $PATTERN ]]; then
-            echo "Nome de branch válido"
-          else
-            echo "Nome de branch fora do padrão: $BRANCH_NAME"
-            echo "Formato: tipo/descricao-em-minusculas-com-hifen"
-            echo "Tipos: feat, fix, refactor, test, docs, ci, chore"
-            echo "Exemplo: feat/cadastro-de-clientes"
-            exit 1
-          fi
+          case "$BASE_REF" in
+            develop)
+              if [[ "$HEAD_REF" =~ $WORK_PATTERN ]]; then
+                echo "Nome de branch válido"
+                exit 0
+              fi
+              echo "Nome fora do padrão: $HEAD_REF"
+              echo "Formato: tipo/descricao-em-minusculas-com-hifen"
+              echo "Tipos: feat, fix, refactor, test, docs, ci, chore"
+              exit 1
+              ;;
+            staging)
+              if [[ "$HEAD_REF" == "develop" ]]; then
+                echo "Promoção válida: develop -> staging"
+                exit 0
+              fi
+              echo "Para a staging só é aceita a branch develop"
+              exit 1
+              ;;
+            main)
+              if [[ "$HEAD_REF" == "staging" ]]; then
+                echo "Promoção válida: staging -> main"
+                exit 0
+              fi
+              if [[ "$HEAD_REF" =~ $FIX_PATTERN ]]; then
+                echo "Correção urgente válida: $HEAD_REF -> main"
+                exit 0
+              fi
+              echo "Para a main só são aceitas a branch staging ou uma fix/*"
+              exit 1
+              ;;
+          esac
