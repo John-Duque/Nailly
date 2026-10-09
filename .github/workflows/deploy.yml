@@ -1,0 +1,43 @@
+# ============================================================
+# Deploy SIMULADO, para praticar os ambientes do GitHub.
+#   develop -> dev | staging -> staging | main -> production (exige aprovação)
+# O deploy real entra aqui quando existir Docker e servidor.
+# ============================================================
+name: Deploy (simulado)
+
+on:
+  push:
+    branches: [develop, staging, main]
+    paths:
+      - "nailly-api/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Um deploy por branch por vez, sem cancelar um que já começou
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy (simulado)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # O ambiente guarda segredos, variáveis e regras próprias (ex.: aprovação manual)
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'staging' && 'staging' || 'dev') }}
+
+    steps:
+      - name: Mostrar destino do deploy
+        env:
+          BRANCH: ${{ github.ref_name }}
+          ENVIRONMENT_NAME: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'staging' && 'staging' || 'dev') }}
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          echo "Branch: $BRANCH"
+          echo "Ambiente: $ENVIRONMENT_NAME"
+          echo "API_URL do ambiente: $API_URL"
+          echo "O deploy real (Docker + servidor) entra aqui quando a infraestrutura existir."
