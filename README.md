@@ -37,3 +37,7 @@ Requer Java 17 ou superior.
 
 ## Contribuição
 Veja [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) para o padrão de branches, commits e Pull Requests.
+
+## Ambientes e fluxo de branches
+`feat/*` → `develop` (dev, squash) → `staging` (homologação, merge commit) → `main` (produção, merge commit).
+A promoção para `production` exige aprovação manual. Detalhes em [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
