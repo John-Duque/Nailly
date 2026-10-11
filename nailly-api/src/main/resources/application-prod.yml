@@ -1,0 +1,9 @@
+logging:
+  level:
+    root: WARN
+    com.nailly: INFO
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
