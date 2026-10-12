@@ -20,3 +20,8 @@ spring:
 
   flyway:
     enabled: true
+
+# API aberta só no perfil local, até a autenticação JWT existir (ver SecurityConfig).
+nailly:
+  security:
+    open-endpoints: false
