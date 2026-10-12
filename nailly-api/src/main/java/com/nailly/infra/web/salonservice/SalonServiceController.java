@@ -5,8 +5,11 @@ import com.nailly.application.salonservice.DeactivateSalonServiceUseCase;
 import com.nailly.application.salonservice.ListProfessionalServicesUseCase;
 import com.nailly.application.salonservice.UpdateSalonServiceUseCase;
 import com.nailly.domain.salonservice.SalonService;
+import com.nailly.infra.security.CurrentUser;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
-/** Catálogo de serviços de uma profissional. */
+/** Catálogo de serviços de uma profissional. Consulta pública; só a própria profissional altera. */
 @RestController
 @RequestMapping("/professionals/{professionalId}/services")
 public class SalonServiceController {
@@ -44,8 +47,10 @@ public class SalonServiceController {
     }
 
     @PostMapping
-    public ResponseEntity<SalonServiceResponse> create(@PathVariable long professionalId,
+    public ResponseEntity<SalonServiceResponse> create(@AuthenticationPrincipal Jwt jwt,
+                                                       @PathVariable long professionalId,
                                                        @Valid @RequestBody SalonServiceRequest request) {
+        CurrentUser.of(jwt).requireProfessional(professionalId);
         SalonService service = createService.execute(professionalId, request.toCommand());
         return ResponseEntity
                 .created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -54,13 +59,16 @@ public class SalonServiceController {
     }
 
     @PutMapping("/{serviceId}")
-    public SalonServiceResponse update(@PathVariable long professionalId, @PathVariable long serviceId,
-                                       @Valid @RequestBody SalonServiceRequest request) {
+    public SalonServiceResponse update(@AuthenticationPrincipal Jwt jwt, @PathVariable long professionalId,
+                                       @PathVariable long serviceId, @Valid @RequestBody SalonServiceRequest request) {
+        CurrentUser.of(jwt).requireProfessional(professionalId);
         return SalonServiceResponse.from(updateService.execute(professionalId, serviceId, request.toCommand()));
     }
 
     @PostMapping("/{serviceId}/deactivate")
-    public SalonServiceResponse deactivate(@PathVariable long professionalId, @PathVariable long serviceId) {
+    public SalonServiceResponse deactivate(@AuthenticationPrincipal Jwt jwt, @PathVariable long professionalId,
+                                           @PathVariable long serviceId) {
+        CurrentUser.of(jwt).requireProfessional(professionalId);
         return SalonServiceResponse.from(deactivateService.execute(professionalId, serviceId));
     }
 }
