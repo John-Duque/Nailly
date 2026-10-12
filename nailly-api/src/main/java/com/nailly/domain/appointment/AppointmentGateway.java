@@ -25,4 +25,10 @@ public interface AppointmentGateway {
 
     /** Pedidos PENDING com {@code expires_at} até {@code now}, para a rotina de expiração. */
     List<Appointment> findPendingExpiredUntil(Instant now);
+
+    /** Agenda da profissional: agendamentos (qualquer status) que tocam [from, to), por horário. */
+    List<Appointment> findByProfessionalBetween(long professionalId, Instant from, Instant to);
+
+    /** Agendamentos da cliente (qualquer status) que tocam [from, to), por horário. */
+    List<Appointment> findByCustomerBetween(long customerId, Instant from, Instant to);
 }
