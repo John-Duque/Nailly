@@ -20,7 +20,7 @@ public interface ProfessionalGateway {
      */
     Optional<Professional> findByIdForUpdate(long id);
 
-    boolean existsByUserId(long userId);
+    Optional<Professional> findByUserId(long userId);
 
     Professional save(Professional professional);
 }
