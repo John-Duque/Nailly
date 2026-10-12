@@ -16,14 +16,17 @@ import com.nailly.domain.salonservice.SalonServiceGateway;
 import com.nailly.domain.salonservice.ServiceDetails;
 import com.nailly.domain.shared.Money;
 import com.nailly.domain.shared.NotFoundException;
+import com.nailly.infra.persistence.professional.JpaProfessionalGateway;
+import com.nailly.infra.persistence.salonservice.JpaSalonServiceGateway;
 import com.nailly.infra.persistence.salonservice.ProcedureTypeEntity;
 import com.nailly.infra.persistence.salonservice.ProcedureTypeJpaRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -39,8 +42,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
+@ActiveProfiles("test")
+@Import({JpaAppointmentGateway.class, JpaProfessionalGateway.class, JpaSalonServiceGateway.class})
 class JpaAppointmentGatewayTest {
 
     private static final Instant NOW = Instant.parse("2026-10-12T12:00:00Z");
@@ -225,5 +229,24 @@ class JpaAppointmentGatewayTest {
         assertThatThrownBy(() -> gateway.save(ghost))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Agendamento não encontrado.");
+    }
+
+    @Test
+    void listsAppointmentsTouchingThePeriod() {
+        Appointment appointment = confirmedAtSalon();
+        appointment.cancel(null, NOW);
+        gateway.save(appointment);
+        Appointment pending = pendingForManual();
+        entityManager.flush();
+
+        assertThat(gateway.findByProfessionalBetween(automatic.getId(), START.minusSeconds(60), START.plusSeconds(60)))
+                .extracting(Appointment::getId, Appointment::getStatus)
+                .containsExactly(tuple(appointment.getId(), AppointmentStatus.CANCELED));
+        assertThat(gateway.findByProfessionalBetween(automatic.getId(), END, END.plusSeconds(3600))).isEmpty();
+        assertThat(gateway.findByProfessionalBetween(automatic.getId(), START.minusSeconds(3600), START)).isEmpty();
+        assertThat(gateway.findByCustomerBetween(CUSTOMER_ID, START, END))
+                .extracting(Appointment::getId)
+                .containsExactlyInAnyOrder(appointment.getId(), pending.getId());
+        assertThat(gateway.findByCustomerBetween(Long.MAX_VALUE, START, END)).isEmpty();
     }
 }
