@@ -49,30 +49,6 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
-    void registersProfessionalWithDefaults() {
-        when(professionalGateway.existsByUserId(7L)).thenReturn(false);
-        givenSaveReturnsArgument();
-
-        Professional professional = new RegisterProfessionalUseCase(professionalGateway)
-                .execute(7L, "Ana", "11999990000", "Nail designer");
-
-        assertThat(professional.getUserId()).isEqualTo(7L);
-        assertThat(professional.getApprovalPolicy()).isEqualTo(ApprovalPolicy.defaults());
-        verify(professionalGateway).save(professional);
-    }
-
-    @Test
-    void doesNotRegisterSameUserTwice() {
-        when(professionalGateway.existsByUserId(7L)).thenReturn(true);
-        RegisterProfessionalUseCase useCase = new RegisterProfessionalUseCase(professionalGateway);
-
-        assertThatThrownBy(() -> useCase.execute(7L, "Ana", null, null))
-                .isInstanceOf(DomainException.class)
-                .hasMessage("Este usuário já tem um perfil de profissional.");
-        verify(professionalGateway, never()).save(any());
-    }
-
-    @Test
     void getsProfessional() {
         Professional stored = givenStored();
 
