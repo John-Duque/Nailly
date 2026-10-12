@@ -44,8 +44,10 @@ Regras: tipo em inglês, descrição em português, no imperativo e com até 70 
 6. O deploy para `production` espera aprovação manual em Actions > Review deployments
 
 ## Correção urgente em produção
-1. Sai uma `fix/...` da `main`, entra na `main` por PR (merge commit)
-2. Depois a correção é trazida de volta para `staging` e `develop`
+1. Sai uma `fix/...` da `main` e entra na `main` por PR (merge commit). **Não apague a branch** nesse merge.
+2. Abra um segundo PR da mesma `fix/...` para a `develop` (squash e, agora sim, apague a branch).
+   PRs de `main` para `develop`, ou de qualquer branch que não seja a `develop` para a `staging`, são recusados pelo check `Validate Branch Name`.
+3. A correção chega à `staging` na próxima promoção `develop` → `staging`, como qualquer outra mudança.
 
 ## Regras no GitHub
 Os rulesets (um por branch de ambiente) ficam documentados em `docs/rulesets/`. Eles não fazem parte dos arquivos do repositório: vivem nas configurações do GitHub.
