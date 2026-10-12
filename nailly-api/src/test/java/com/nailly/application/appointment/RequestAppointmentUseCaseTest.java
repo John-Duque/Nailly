@@ -19,6 +19,7 @@ import com.nailly.domain.shared.GeoPoint;
 import com.nailly.domain.shared.Money;
 import com.nailly.domain.shared.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -116,6 +117,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Salva combo no local da profissional com endereço e preço total")
     void savesComboAtProfessionalLocation() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         when(salonServiceGateway.findAllByIds(List.of(2L, 1L)))
@@ -137,6 +139,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Domicílio usa o endereço cadastrado e calcula distância e taxa")
     void homeVisitUsesRegisteredCustomerAddress() {
         givenProfessional(ApprovalMode.MANUAL);
         givenService();
@@ -157,6 +160,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Domicílio exige endereço com coordenadas")
     void homeVisitNeedsAddressWithCoordinates() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         givenService();
@@ -169,6 +173,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recusa endereço removido")
     void removedAddressIsRefused() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         givenService();
@@ -183,6 +188,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recusa local desativado")
     void inactiveLocationIsRefused() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         givenService();
@@ -197,6 +203,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Exige local ou endereço conforme o tipo de atendimento")
     void requiresLocationOrAddressForTheChosenMode() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         when(salonServiceGateway.findAllByIds(List.of(1L))).thenReturn(List.of(service(1L, 60, "50")));
@@ -212,6 +219,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Exige o tipo de atendimento")
     void requiresServiceMode() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         RequestAppointmentCommand command = baseCommand(null).build();
@@ -224,6 +232,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recusa horário fora do horário de funcionamento")
     void refusesTimeOutsideWorkingHours() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         givenService();
@@ -239,6 +248,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recusa horário já ocupado")
     void refusesOccupiedSchedule() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         givenService();
@@ -254,6 +264,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recusa profissional inexistente")
     void refusesUnknownProfessional() {
         when(professionalGateway.findByIdForUpdate(PROFESSIONAL_ID)).thenReturn(Optional.empty());
         RequestAppointmentCommand command = atLocation(List.of(1L));
@@ -264,6 +275,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Recusa serviço inexistente")
     void refusesUnknownService() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         when(salonServiceGateway.findAllByIds(List.of(1L, 99L))).thenReturn(List.of(service(1L, 60, "50")));
@@ -275,6 +287,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Serviço repetido cai na regra do domínio")
     void repeatedServiceReachesDomainRule() {
         givenProfessional(ApprovalMode.AUTOMATIC);
         when(salonServiceGateway.findAllByIds(anyCollection())).thenReturn(List.of(service(1L, 60, "50")));
@@ -287,6 +300,7 @@ class RequestAppointmentUseCaseTest {
     }
 
     @Test
+    @DisplayName("Comando guarda a própria cópia da lista de serviços")
     void commandKeepsItsOwnCopyOfServiceIds() {
         List<Long> ids = new ArrayList<>(List.of(1L));
         RequestAppointmentCommand command = atLocation(ids);

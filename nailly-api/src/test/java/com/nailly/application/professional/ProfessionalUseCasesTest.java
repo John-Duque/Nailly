@@ -8,6 +8,7 @@ import com.nailly.domain.professional.ProfessionalGateway;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.GeoPoint;
 import com.nailly.domain.shared.NotFoundException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -49,6 +50,7 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
+    @DisplayName("Busca a profissional")
     void getsProfessional() {
         Professional stored = givenStored();
 
@@ -56,6 +58,7 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
+    @DisplayName("Profissional inexistente dá não encontrada")
     void unknownProfessionalIsNotFound() {
         when(professionalGateway.getById(PROFESSIONAL_ID)).thenCallRealMethod();
         when(professionalGateway.findById(PROFESSIONAL_ID)).thenReturn(Optional.empty());
@@ -67,6 +70,7 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
+    @DisplayName("Atualiza o perfil")
     void updatesProfile() {
         givenStored();
         givenSaveReturnsArgument();
@@ -80,6 +84,7 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
+    @DisplayName("Atualiza as regras de aprovação")
     void updatesApprovalPolicy() {
         givenStored();
         givenSaveReturnsArgument();
@@ -92,6 +97,7 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
+    @DisplayName("Atualiza as regras de domicílio")
     void updatesHomeVisitPolicy() {
         givenStored();
         givenSaveReturnsArgument();
@@ -104,6 +110,7 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
+    @DisplayName("Desativa a profissional")
     void deactivatesProfessional() {
         givenStored();
         givenSaveReturnsArgument();
@@ -114,6 +121,7 @@ class ProfessionalUseCasesTest {
     }
 
     @Test
+    @DisplayName("Alteração inválida não é salva")
     void invalidChangeIsNotSaved() {
         givenStored();
         UpdateProfessionalProfileUseCase useCase = new UpdateProfessionalProfileUseCase(professionalGateway);

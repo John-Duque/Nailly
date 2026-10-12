@@ -3,6 +3,7 @@ package com.nailly.domain.professional;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.GeoPoint;
 import com.nailly.domain.shared.Money;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -26,16 +27,19 @@ class HomeVisitPolicyTest {
 
     @ParameterizedTest
     @CsvSource({"0.0, 10.00", "4.9, 10.00", "5.0, 10.00", "5.1, 20.00", "10.0, 20.00"})
+    @DisplayName("Cobra a menor faixa que cobre a distância")
     void chargesSmallestBandThatCoversDistance(String distanceKm, String expectedFee) {
         assertThat(POLICY.feeFor(new BigDecimal(distanceKm))).contains(Money.of(expectedFee));
     }
 
     @Test
+    @DisplayName("Não atende além da última faixa")
     void doesNotServeBeyondLastBand() {
         assertThat(POLICY.feeFor(new BigDecimal("10.1"))).isEmpty();
     }
 
     @Test
+    @DisplayName("Não atende quando não há faixas")
     void doesNotServeWithoutBands() {
         HomeVisitPolicy policy = new HomeVisitPolicy(true, ORIGIN, null);
 
@@ -44,12 +48,14 @@ class HomeVisitPolicyTest {
     }
 
     @Test
+    @DisplayName("Mantém as faixas em ordem de distância")
     void keepsBandsSortedByDistance() {
         assertThat(POLICY.getFees()).extracting(HomeVisitFee::getMaxDistanceKm)
                 .containsExactly(new BigDecimal("5.0"), new BigDecimal("10.0"));
     }
 
     @Test
+    @DisplayName("Recusa duas faixas com a mesma distância")
     void rejectsDuplicatedBandDistance() {
         List<HomeVisitFee> fees = List.of(fee("5", "10"), fee("5.0", "15"));
 
@@ -59,6 +65,7 @@ class HomeVisitPolicyTest {
     }
 
     @Test
+    @DisplayName("Exige ponto de saída quando atende a domicílio")
     void requiresOriginWhenOffered() {
         assertThatThrownBy(() -> new HomeVisitPolicy(true, null, List.of()))
                 .isInstanceOf(DomainException.class)
@@ -66,6 +73,7 @@ class HomeVisitPolicyTest {
     }
 
     @Test
+    @DisplayName("Sem domicílio não há taxa nem cálculo de distância")
     void notOfferedHasNoFeeAndNoDistance() {
         HomeVisitPolicy policy = HomeVisitPolicy.notOffered();
 
@@ -76,11 +84,13 @@ class HomeVisitPolicyTest {
     }
 
     @Test
+    @DisplayName("Distância é em linha reta, arredondada para uma casa decimal")
     void distanceIsStraightLineRoundedToOneDecimal() {
         assertThat(POLICY.distanceKmTo(new GeoPoint(0.05, 0))).isEqualTo(new BigDecimal("5.6"));
     }
 
     @Test
+    @DisplayName("Faixa recusa distância e valor inválidos")
     void feeBandRejectsInvalidValues() {
         assertThatThrownBy(() -> new HomeVisitFee(null, Money.ZERO))
                 .isInstanceOf(DomainException.class)

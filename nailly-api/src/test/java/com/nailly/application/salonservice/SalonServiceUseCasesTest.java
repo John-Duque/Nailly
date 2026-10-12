@@ -13,6 +13,7 @@ import com.nailly.domain.salonservice.ServiceDetails;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.Money;
 import com.nailly.domain.shared.NotFoundException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -73,6 +74,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Cria serviço para a profissional")
     void createsServiceForProfessional() {
         givenProfessional(true);
         givenProcedureType(GEL);
@@ -92,6 +94,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Profissional desativada não cria serviço")
     void inactiveProfessionalCannotCreateService() {
         givenProfessional(false);
         CreateSalonServiceUseCase useCase = new CreateSalonServiceUseCase(salonServiceGateway, professionalGateway,
@@ -104,6 +107,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Recusa técnica desativada")
     void inactiveProcedureTypeIsRefused() {
         givenProfessional(true);
         givenProcedureType(INACTIVE);
@@ -118,6 +122,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Técnica inexistente dá não encontrada")
     void unknownProcedureTypeIsNotFound() {
         givenProfessional(true);
         when(procedureTypeGateway.getActiveById(anyLong())).thenCallRealMethod();
@@ -131,6 +136,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Edita o próprio serviço")
     void updatesOwnService() {
         givenStoredService(PROFESSIONAL_ID);
         givenProcedureType(GEL);
@@ -145,6 +151,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Serviço de outra profissional dá não encontrado")
     void serviceOfAnotherProfessionalIsNotFound() {
         givenStoredService(99L);
         UpdateSalonServiceUseCase useCase = new UpdateSalonServiceUseCase(salonServiceGateway, procedureTypeGateway);
@@ -156,6 +163,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Desativa o próprio serviço")
     void deactivatesOwnService() {
         givenStoredService(PROFESSIONAL_ID);
         givenSaveReturnsArgument();
@@ -167,6 +175,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Lista os serviços ativos da profissional")
     void listsActiveServicesOfProfessional() {
         List<SalonService> services = List.of(new SalonService(SERVICE_ID, PROFESSIONAL_ID,
                 new ServiceDetails(GEL, "Gel", null, BodyArea.HANDS, 60, Money.of("50"), true)));
@@ -177,6 +186,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Lista as técnicas ativas")
     void listsActiveProcedureTypes() {
         when(procedureTypeGateway.findAllActive()).thenReturn(List.of(GEL));
 
@@ -184,6 +194,7 @@ class SalonServiceUseCasesTest {
     }
 
     @Test
+    @DisplayName("Comando expõe os dados do serviço")
     void commandExposesItsData() {
         assertThat(COMMAND.getProcedureTypeId()).isEqualTo(2L);
         assertThat(COMMAND.getTitle()).isEqualTo("Gel nas mãos");

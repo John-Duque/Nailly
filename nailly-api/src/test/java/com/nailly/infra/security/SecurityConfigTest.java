@@ -2,6 +2,7 @@ package com.nailly.infra.security;
 
 import com.nailly.application.user.AuthenticatedAccount;
 import com.nailly.domain.user.Role;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,6 +36,7 @@ class SecurityConfigTest {
     private JwtEncoder jwtEncoder;
 
     @Test
+    @DisplayName("Catálogo é público")
     void catalogIsPublic() throws Exception {
         mockMvc.perform(get("/procedure-types")).andExpect(status().isOk());
         mockMvc.perform(get("/professionals/{id}", Long.MAX_VALUE)).andExpect(status().isNotFound());
@@ -44,6 +46,7 @@ class SecurityConfigTest {
     }
 
     @Test
+    @DisplayName("Login e cadastro não exigem token nem CSRF")
     void loginAndRegistrationNeedNoTokenNorCsrf() throws Exception {
         mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest());
@@ -54,6 +57,7 @@ class SecurityConfigTest {
     }
 
     @Test
+    @DisplayName("O resto exige token e responde 401")
     void everythingElseRequiresToken() throws Exception {
         mockMvc.perform(get("/customers/me"))
                 .andExpect(status().isUnauthorized())
@@ -67,6 +71,7 @@ class SecurityConfigTest {
     }
 
     @Test
+    @DisplayName("Recusa token inválido ou vencido")
     void invalidOrExpiredTokenIsRefused() throws Exception {
         TokenService expiredIssuer = new TokenService(jwtEncoder, Duration.ofMinutes(5),
                 Clock.fixed(Instant.now().minus(Duration.ofHours(1)), ZoneOffset.UTC));

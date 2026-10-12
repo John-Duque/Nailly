@@ -16,6 +16,7 @@ import com.nailly.infra.security.JwtConfig;
 import com.nailly.infra.security.ProblemDetailsSecurityHandler;
 import com.nailly.infra.security.SecurityConfig;
 import com.nailly.infra.security.TokenService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("Técnicas são públicas")
     void procedureTypesArePublic() throws Exception {
         when(listProcedureTypes.execute()).thenReturn(List.of(GEL));
 
@@ -97,6 +99,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("Catálogo de serviços é público")
     void catalogIsPublic() throws Exception {
         when(listServices.execute(PROFESSIONAL_ID)).thenReturn(List.of(service()));
 
@@ -115,6 +118,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("A própria profissional cria serviço")
     void ownerCreatesService() throws Exception {
         when(createService.execute(eq(PROFESSIONAL_ID), any())).thenReturn(service());
 
@@ -137,6 +141,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("Só a própria profissional altera o catálogo")
     void onlyTheOwnerChangesTheCatalog() throws Exception {
         mockMvc.perform(post("/professionals/{id}/services", PROFESSIONAL_ID)
                         .contentType(MediaType.APPLICATION_JSON).content(VALID_SERVICE))
@@ -149,6 +154,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("Recusa serviço inválido listando os campos")
     void invalidServiceIsRefused() throws Exception {
         mockMvc.perform(asOwner(post("/professionals/{id}/services", PROFESSIONAL_ID))
                         .contentType(MediaType.APPLICATION_JSON).content("""
@@ -162,6 +168,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("A própria profissional edita serviço")
     void ownerUpdatesService() throws Exception {
         when(updateService.execute(eq(PROFESSIONAL_ID), eq(SERVICE_ID), any())).thenReturn(service());
 
@@ -172,6 +179,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("Serviço de outra profissional vira 404")
     void serviceOfAnotherProfessionalIs404() throws Exception {
         when(updateService.execute(eq(PROFESSIONAL_ID), eq(99L), any()))
                 .thenThrow(new NotFoundException("Serviço não encontrado."));
@@ -183,6 +191,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
+    @DisplayName("A própria profissional desativa serviço")
     void ownerDeactivatesService() throws Exception {
         when(deactivateService.execute(PROFESSIONAL_ID, SERVICE_ID)).thenReturn(service());
 

@@ -5,6 +5,7 @@ import com.nailly.domain.shared.SalonTime;
 import com.nailly.infra.persistence.salonservice.ProcedureTypeEntity;
 import com.nailly.infra.persistence.salonservice.ProcedureTypeJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -117,6 +118,7 @@ class ApiFlowIntegrationTest {
     }
 
     @Test
+    @DisplayName("Cliente agenda no estúdio e cada lado vê só o que é seu")
     void customerBooksAtTheStudioAndEachSideSeesIt() throws Exception {
         String customer = registerCustomer("bia@nailly.com");
         String atStudio = booking(10, "\"mode\": \"AT_LOCATION\", \"locationId\": " + locationId);
@@ -160,6 +162,7 @@ class ApiFlowIntegrationTest {
     }
 
     @Test
+    @DisplayName("Pedido a domicílio espera a profissional confirmar")
     void homeVisitRequestWaitsForTheProfessional() throws Exception {
         String customer = registerCustomer("bia@nailly.com");
         long addressId = Long.parseLong(read(mockMvc.perform(json(post("/customers/me/addresses"), customer, """
@@ -184,6 +187,7 @@ class ApiFlowIntegrationTest {
     }
 
     @Test
+    @DisplayName("Profissional faz login de novo e edita o perfil")
     void professionalLogsInAgain() throws Exception {
         String token = read(mockMvc.perform(json(post("/auth/login"), null, """
                 {"email": "ANA@nailly.com", "password": "senha-forte"}

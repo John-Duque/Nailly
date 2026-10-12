@@ -13,6 +13,7 @@ import com.nailly.domain.user.User;
 import com.nailly.domain.user.UserGateway;
 import com.nailly.infra.persistence.user.JpaUserGateway;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -51,6 +52,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Grava usuário e encontra pelo e-mail")
     void savesAndFindsUserByEmail() {
         User saved = userGateway.save(new User(null, "Ana@Nailly.com", "hash-bcrypt", Role.PROFESSIONAL));
         flushAndClear();
@@ -67,6 +69,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Grava a desativação do usuário")
     void savesUserDeactivation() {
         User user = userGateway.save(new User(null, "ana@nailly.com", "hash", Role.CUSTOMER));
         user.deactivate();
@@ -78,6 +81,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Salvar usuário inexistente dá não encontrado")
     void savingUnknownUserIsNotFound() {
         User ghost = new User(Long.MAX_VALUE, "ana@nailly.com", "hash", Role.CUSTOMER);
 
@@ -87,6 +91,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Grava cliente e encontra por id e por usuário")
     void savesAndFindsCustomer() {
         Customer customer = newCustomer();
         customer.updateProfile("Ana Paula", "11988887777");
@@ -104,6 +109,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Salvar cliente inexistente dá não encontrada")
     void savingUnknownCustomerIsNotFound() {
         Customer ghost = new Customer(Long.MAX_VALUE, null, "Ana", "119");
 
@@ -113,6 +119,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Grava endereço com coordenadas")
     void savesAddressWithCoordinates() {
         Customer customer = newCustomer();
         CustomerAddress saved = addressGateway.save(new CustomerAddress(null, customer.getId(),
@@ -129,6 +136,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Edita e desativa endereço, listando só os ativos")
     void updatesAndDeactivatesAddress() {
         Customer customer = newCustomer();
         CustomerAddress address = addressGateway.save(new CustomerAddress(null, customer.getId(),
@@ -151,6 +159,7 @@ class JpaAccountGatewaysTest {
     }
 
     @Test
+    @DisplayName("Endereço inexistente não é encontrado nem salvo")
     void unknownAddressIsEmptyAndCannotBeSaved() {
         CustomerAddress ghost = new CustomerAddress(Long.MAX_VALUE, 1L, new Place("Casa", ADDRESS, null));
 

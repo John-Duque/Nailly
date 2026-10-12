@@ -9,6 +9,7 @@ import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.GeoPoint;
 import com.nailly.domain.shared.NotFoundException;
 import com.nailly.domain.shared.Place;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -56,6 +57,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Busca a cliente")
     void getsCustomer() {
         Customer customer = givenCustomer();
 
@@ -63,6 +65,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Cliente inexistente dá não encontrada")
     void unknownCustomerIsNotFound() {
         when(customerGateway.getById(CUSTOMER_ID)).thenCallRealMethod();
         when(customerGateway.findById(CUSTOMER_ID)).thenReturn(Optional.empty());
@@ -74,6 +77,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Atualiza nome e telefone")
     void updatesProfile() {
         givenCustomer();
         when(customerGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -86,6 +90,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Perfil inválido não é salvo")
     void invalidProfileIsNotSaved() {
         givenCustomer();
         UpdateCustomerProfileUseCase useCase = new UpdateCustomerProfileUseCase(customerGateway);
@@ -97,6 +102,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Cadastra endereço para a cliente")
     void addsAddressToExistingCustomer() {
         givenCustomer();
         givenSaveReturnsArgument();
@@ -110,6 +116,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Edita o próprio endereço")
     void updatesOwnAddress() {
         givenAddress(CUSTOMER_ID);
         givenSaveReturnsArgument();
@@ -122,6 +129,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Endereço de outra cliente dá não encontrado")
     void addressOfAnotherCustomerIsNotFound() {
         givenAddress(99L);
         UpdateCustomerAddressUseCase useCase = new UpdateCustomerAddressUseCase(addressGateway);
@@ -133,6 +141,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Remove o próprio endereço")
     void deactivatesOwnAddress() {
         givenAddress(CUSTOMER_ID);
         givenSaveReturnsArgument();
@@ -144,6 +153,7 @@ class CustomerUseCasesTest {
     }
 
     @Test
+    @DisplayName("Lista os endereços ativos")
     void listsActiveAddresses() {
         List<CustomerAddress> addresses = List.of(new CustomerAddress(ADDRESS_ID, CUSTOMER_ID, HOME));
         when(addressGateway.findActiveByCustomer(CUSTOMER_ID)).thenReturn(addresses);

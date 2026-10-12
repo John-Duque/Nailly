@@ -13,6 +13,7 @@ import com.nailly.domain.shared.NotFoundException;
 import com.nailly.infra.persistence.professional.JpaProfessionalGateway;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -67,6 +68,7 @@ class JpaSalonServiceGatewayTest {
     }
 
     @Test
+    @DisplayName("Grava e lê todos os dados do serviço")
     void savesAndLoadsAllData() {
         SalonService saved = gateway.save(newService("Gel nas mãos"));
 
@@ -86,6 +88,7 @@ class JpaSalonServiceGatewayTest {
     }
 
     @Test
+    @DisplayName("Atualiza dados e técnica do serviço")
     void updatesDetailsAndProcedureType() {
         SalonService service = gateway.save(newService("Gel"));
         service.update(new ServiceDetails(blindagem, "Blindagem nos pés", null, BodyArea.FEET, 60,
@@ -102,6 +105,7 @@ class JpaSalonServiceGatewayTest {
     }
 
     @Test
+    @DisplayName("Lista só os serviços ativos da profissional, por título")
     void listsOnlyActiveServicesOfProfessionalByTitle() {
         SalonService zeta = gateway.save(newService("Zeta"));
         SalonService alpha = gateway.save(newService("Alpha"));
@@ -118,6 +122,7 @@ class JpaSalonServiceGatewayTest {
     }
 
     @Test
+    @DisplayName("Busca vários ids ignorando os inexistentes")
     void findsAllByIdsIgnoringUnknown() {
         SalonService first = gateway.save(newService("Primeiro"));
         SalonService second = gateway.save(newService("Segundo"));
@@ -128,6 +133,7 @@ class JpaSalonServiceGatewayTest {
     }
 
     @Test
+    @DisplayName("Serviço inexistente não é encontrado nem salvo")
     void unknownServiceIsEmptyAndCannotBeSaved() {
         SalonService ghost = new SalonService(Long.MAX_VALUE, professionalId, newService("X").getDetails());
 
@@ -138,6 +144,7 @@ class JpaSalonServiceGatewayTest {
     }
 
     @Test
+    @DisplayName("Lista as técnicas ativas por nome")
     void listsActiveProcedureTypesByName() {
         List<ProcedureType> active = procedureTypeGateway.findAllActive();
 

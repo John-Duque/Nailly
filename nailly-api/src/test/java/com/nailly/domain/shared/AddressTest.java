@@ -1,5 +1,6 @@
 package com.nailly.domain.shared;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -14,6 +15,7 @@ class AddressTest {
     }
 
     @Test
+    @DisplayName("Normaliza espaços, UF em maiúsculas e CEP com hífen")
     void normalizesStateAndZipCode() {
         Address address = address(null);
 
@@ -27,12 +29,14 @@ class AddressTest {
     }
 
     @Test
+    @DisplayName("Formata o endereço numa linha, com complemento quando houver")
     void formatsInOneLine() {
         assertThat(address(null).format()).isEqualTo("Rua A, 10, Centro, São Paulo/SP, 01000-000");
         assertThat(address("Apto 3")).hasToString("Rua A, 10 - Apto 3, Centro, São Paulo/SP, 01000-000");
     }
 
     @Test
+    @DisplayName("Texto formatado cabe na coluna do agendamento")
     void formattedTextFitsTheAppointmentColumn() {
         Address longAddress = new Address("R".repeat(150), "1".repeat(20), "C".repeat(80), "B".repeat(80),
                 "S".repeat(80), "SP", "01000-000");
@@ -42,6 +46,7 @@ class AddressTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"S", "SPP", "S1"})
+    @DisplayName("Recusa UF inválida")
     void rejectsInvalidState(String state) {
         assertThatThrownBy(() -> new Address("Rua A", "10", null, "Centro", "São Paulo", state, "01000-000"))
                 .isInstanceOf(DomainException.class)
@@ -50,6 +55,7 @@ class AddressTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"0100-000", "010000000", "01000-00A"})
+    @DisplayName("Recusa CEP inválido")
     void rejectsInvalidZipCode(String zipCode) {
         assertThatThrownBy(() -> new Address("Rua A", "10", null, "Centro", "São Paulo", "SP", zipCode))
                 .isInstanceOf(DomainException.class)
@@ -57,6 +63,7 @@ class AddressTest {
     }
 
     @Test
+    @DisplayName("Exige rua, número, bairro, cidade, UF e CEP")
     void requiresMainFields() {
         assertThatThrownBy(() -> new Address(" ", "10", null, "Centro", "São Paulo", "SP", "01000-000"))
                 .hasMessage("Informe a rua.");
@@ -73,6 +80,7 @@ class AddressTest {
     }
 
     @Test
+    @DisplayName("Lugar exige nome e endereço")
     void placeRequiresNameAndAddress() {
         Address address = address(null);
         GeoPoint point = new GeoPoint(-23.5, -46.6);

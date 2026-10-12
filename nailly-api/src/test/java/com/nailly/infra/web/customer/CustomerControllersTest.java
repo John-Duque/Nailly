@@ -20,6 +20,7 @@ import com.nailly.infra.security.JwtConfig;
 import com.nailly.infra.security.ProblemDetailsSecurityHandler;
 import com.nailly.infra.security.SecurityConfig;
 import com.nailly.infra.security.TokenService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,6 +109,7 @@ class CustomerControllersTest {
     }
 
     @Test
+    @DisplayName("Cliente vê o próprio perfil")
     void customerSeesOwnProfile() throws Exception {
         when(getCustomer.execute(CUSTOMER_ID)).thenReturn(new Customer(CUSTOMER_ID, 8L, "Bia", "11999990000"));
 
@@ -119,6 +121,7 @@ class CustomerControllersTest {
     }
 
     @Test
+    @DisplayName("Perfil exige login de cliente")
     void profileRequiresCustomerLogin() throws Exception {
         mockMvc.perform(get("/customers/me")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/customers/me").header(HttpHeaders.AUTHORIZATION, professionalToken(10L)))
@@ -128,6 +131,7 @@ class CustomerControllersTest {
     }
 
     @Test
+    @DisplayName("Cliente atualiza o perfil")
     void customerUpdatesProfile() throws Exception {
         when(updateProfile.execute(CUSTOMER_ID, "Bia Lima", "11988887777"))
                 .thenReturn(new Customer(CUSTOMER_ID, 8L, "Bia Lima", "11988887777"));
@@ -140,6 +144,7 @@ class CustomerControllersTest {
     }
 
     @Test
+    @DisplayName("Cliente lista os próprios agendamentos do período")
     void customerListsOwnAppointmentsOfThePeriod() throws Exception {
         Instant from = Instant.parse("2026-10-01T03:00:00Z");
         Instant to = Instant.parse("2026-10-31T03:00:00Z");
@@ -152,6 +157,7 @@ class CustomerControllersTest {
     }
 
     @Test
+    @DisplayName("Cliente cadastra endereço")
     void customerAddsAddress() throws Exception {
         when(addAddress.execute(eq(CUSTOMER_ID), any())).thenReturn(home());
 
@@ -180,6 +186,7 @@ class CustomerControllersTest {
     }
 
     @Test
+    @DisplayName("Recusa endereço inválido")
     void invalidAddressIsRefused() throws Exception {
         mockMvc.perform(asCustomer(post("/customers/me/addresses")).contentType(MediaType.APPLICATION_JSON).content("""
                         {"name": "Casa", "street": "Rua B", "number": "20", "neighborhood": "Jardins",
@@ -192,6 +199,7 @@ class CustomerControllersTest {
     }
 
     @Test
+    @DisplayName("Cliente lista, edita e remove os próprios endereços")
     void customerManagesOwnAddresses() throws Exception {
         CustomerAddress removed = home();
         removed.deactivate();

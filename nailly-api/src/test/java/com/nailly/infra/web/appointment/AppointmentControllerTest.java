@@ -19,6 +19,7 @@ import com.nailly.infra.security.ProblemDetailsSecurityHandler;
 import com.nailly.infra.security.SecurityConfig;
 import com.nailly.infra.security.TokenService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +119,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Cliente pede agendamento no local")
     void customerRequestsAppointmentAtLocation() throws Exception {
         when(requestAppointment.execute(any())).thenReturn(appointment(AppointmentStatus.CONFIRMED));
 
@@ -148,6 +150,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Cliente pede domicílio no endereço cadastrado")
     void customerRequestsHomeVisitAtRegisteredAddress() throws Exception {
         when(requestAppointment.execute(any())).thenReturn(appointment(AppointmentStatus.PENDING));
 
@@ -163,6 +166,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Só cliente logada pede agendamento")
     void onlyCustomersRequestAppointments() throws Exception {
         mockMvc.perform(post("/appointments").contentType(MediaType.APPLICATION_JSON).content(AT_LOCATION))
                 .andExpect(status().isUnauthorized());
@@ -174,6 +178,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Recusa pedido inválido listando os campos")
     void invalidRequestIsRefused() throws Exception {
         mockMvc.perform(newRequest("""
                         {"professionalId": 10, "serviceIds": [], "locationId": 0}
@@ -185,6 +190,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Recusa data em formato inválido")
     void invalidDateFormatIsRefused() throws Exception {
         mockMvc.perform(newRequest(AT_LOCATION.replace("2026-10-13T13:00:00Z", "13/10/2026 10:00")))
                 .andExpect(status().isBadRequest())
@@ -193,6 +199,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Regra de negócio vira 422")
     void businessRuleBecomes422() throws Exception {
         when(requestAppointment.execute(any()))
                 .thenThrow(new DomainException("O horário escolhido está fora do horário de atendimento."));
@@ -203,6 +210,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Registro relacionado inexistente vira 409")
     void missingRelatedRecordBecomes409() throws Exception {
         when(requestAppointment.execute(any())).thenThrow(new DataIntegrityViolationException("fk"));
 
@@ -212,6 +220,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Erro inesperado vira 500 sem expor detalhes")
     void unexpectedErrorDoesNotLeakDetails() throws Exception {
         when(requestAppointment.execute(any())).thenThrow(new IllegalStateException("conexão perdida com 10.0.0.5"));
 
@@ -223,6 +232,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Cliente e profissional do agendamento podem vê-lo")
     void participantsSeeTheAppointment() throws Exception {
         mockMvc.perform(asCustomer(get("/appointments/{id}", APPOINTMENT_ID)))
                 .andExpect(status().isOk())
@@ -234,6 +244,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Quem não participa não vê o agendamento")
     void othersCannotSeeTheAppointment() throws Exception {
         mockMvc.perform(get("/appointments/{id}", APPOINTMENT_ID)
                         .header(HttpHeaders.AUTHORIZATION, customerToken(21L)))
@@ -247,6 +258,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Profissional confirma, recusa, conclui e marca falta")
     void professionalDecidesAndFinishes() throws Exception {
         when(confirmAppointment.execute(APPOINTMENT_ID)).thenReturn(appointment(AppointmentStatus.CONFIRMED));
         when(completeAppointment.execute(APPOINTMENT_ID)).thenReturn(appointment(AppointmentStatus.COMPLETED));
@@ -266,6 +278,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Cliente não decide pela profissional")
     void customerCannotDecideForTheProfessional() throws Exception {
         mockMvc.perform(asCustomer(post("/appointments/{id}/confirm", APPOINTMENT_ID)))
                 .andExpect(status().isForbidden());
@@ -276,6 +289,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Cliente e profissional podem cancelar")
     void bothParticipantsCanCancel() throws Exception {
         when(cancelAppointment.execute(APPOINTMENT_ID, null)).thenReturn(appointment(AppointmentStatus.CANCELED));
         when(cancelAppointment.execute(APPOINTMENT_ID, "Imprevisto"))
@@ -292,6 +306,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Recusa motivo longo demais")
     void tooLongReasonIsRefused() throws Exception {
         mockMvc.perform(asCustomer(post("/appointments/{id}/cancel", APPOINTMENT_ID))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -302,6 +317,7 @@ class AppointmentControllerTest {
     }
 
     @Test
+    @DisplayName("Rota inexistente continua 404")
     void unknownRouteKeeps404() throws Exception {
         mockMvc.perform(asCustomer(get("/appointments/{id}/nothing", APPOINTMENT_ID)))
                 .andExpect(status().isNotFound());

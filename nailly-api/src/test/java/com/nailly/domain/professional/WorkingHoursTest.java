@@ -3,6 +3,7 @@ package com.nailly.domain.professional;
 import com.nailly.domain.shared.Address;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.Place;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
@@ -30,6 +31,7 @@ class WorkingHoursTest {
     }
 
     @Test
+    @DisplayName("Mantém os períodos em ordem e identifica local ou domicílio")
     void keepsPeriodsInOrder() {
         assertThat(TUESDAY_WITH_LUNCH.getPeriods()).extracting(WorkingPeriod::getStart)
                 .containsExactly(LocalTime.of(9, 0), LocalTime.of(13, 0));
@@ -40,17 +42,20 @@ class WorkingHoursTest {
     }
 
     @Test
+    @DisplayName("Aceita agendamento dentro de um período")
     void coversAppointmentInsideOnePeriod() {
         assertThat(TUESDAY_WITH_LUNCH.covers(tuesdayLocal(9, 0), tuesdayLocal(12, 0))).isTrue();
         assertThat(TUESDAY_WITH_LUNCH.covers(tuesdayLocal(14, 30), tuesdayLocal(16, 0))).isTrue();
     }
 
     @Test
+    @DisplayName("Recusa agendamento que atravessa o intervalo")
     void doesNotCoverAppointmentCrossingTheBreak() {
         assertThat(TUESDAY_WITH_LUNCH.covers(tuesdayLocal(11, 30), tuesdayLocal(13, 30))).isFalse();
     }
 
     @Test
+    @DisplayName("Recusa agendamento fora do horário ou em outro dia")
     void doesNotCoverOutsideHoursOrOtherDays() {
         assertThat(TUESDAY_WITH_LUNCH.covers(tuesdayLocal(8, 0), tuesdayLocal(9, 30))).isFalse();
         assertThat(TUESDAY_WITH_LUNCH.covers(tuesdayLocal(17, 30), tuesdayLocal(18, 30))).isFalse();
@@ -59,6 +64,7 @@ class WorkingHoursTest {
     }
 
     @Test
+    @DisplayName("Recusa agendamento que termina no dia seguinte")
     void doesNotCoverAppointmentEndingOnTheNextDay() {
         WorkingHours lateNight = new WorkingHours(10L, null, List.of(period(DayOfWeek.TUESDAY, 20, 23)));
 
@@ -66,12 +72,14 @@ class WorkingHoursTest {
     }
 
     @Test
+    @DisplayName("Sem períodos, o local está fechado")
     void noPeriodsMeansClosed() {
         assertThat(new WorkingHours(10L, 3L, List.of()).covers(tuesdayLocal(10, 0), tuesdayLocal(11, 0)))
                 .isFalse();
     }
 
     @Test
+    @DisplayName("Recusa períodos sobrepostos no mesmo dia")
     void rejectsOverlappingPeriodsOnSameDay() {
         List<WorkingPeriod> overlapping = List.of(period(DayOfWeek.MONDAY, 9, 12), period(DayOfWeek.MONDAY, 11, 14));
 
@@ -81,6 +89,7 @@ class WorkingHoursTest {
     }
 
     @Test
+    @DisplayName("Aceita o mesmo horário em dias diferentes")
     void samePeriodOnDifferentDaysIsFine() {
         List<WorkingPeriod> week = List.of(period(DayOfWeek.MONDAY, 9, 18), period(DayOfWeek.FRIDAY, 9, 18));
 
@@ -88,6 +97,7 @@ class WorkingHoursTest {
     }
 
     @Test
+    @DisplayName("Período exige dia e fim depois do início")
     void periodRequiresEndAfterStart() {
         LocalTime nine = LocalTime.of(9, 0);
 
@@ -100,6 +110,7 @@ class WorkingHoursTest {
     }
 
     @Test
+    @DisplayName("Local pertence à profissional e pode ser editado e desativado")
     void locationBelongsToProfessionalAndCanChange() {
         Address address = new Address("Rua A", "10", null, "Centro", "São Paulo", "SP", "01000-000");
         ProfessionalLocation location = new ProfessionalLocation(3L, 10L, new Place("Estúdio", address, null));

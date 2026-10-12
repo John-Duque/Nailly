@@ -13,6 +13,7 @@ import com.nailly.domain.shared.NotFoundException;
 import com.nailly.domain.shared.Place;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -69,6 +70,7 @@ class JpaProfessionalPlacesGatewaysTest {
     }
 
     @Test
+    @DisplayName("Grava locais e lista só os ativos")
     void savesAndListsActiveLocations() {
         ProfessionalLocation studio = newLocation("Estúdio");
         ProfessionalLocation salon = newLocation("Salão");
@@ -89,6 +91,7 @@ class JpaProfessionalPlacesGatewaysTest {
     }
 
     @Test
+    @DisplayName("Local inexistente não é encontrado nem salvo")
     void unknownLocationIsEmptyAndCannotBeSaved() {
         ProfessionalLocation ghost = new ProfessionalLocation(Long.MAX_VALUE, professionalId,
                 new Place("Estúdio", ADDRESS, null));
@@ -100,6 +103,7 @@ class JpaProfessionalPlacesGatewaysTest {
     }
 
     @Test
+    @DisplayName("Grava horários por local e a domicílio")
     void savesWorkingHoursPerLocationAndHomeVisit() {
         long locationId = newLocation("Estúdio").getId();
 
@@ -117,6 +121,7 @@ class JpaProfessionalPlacesGatewaysTest {
     }
 
     @Test
+    @DisplayName("Salvar troca só os horários daquele local")
     void savingReplacesPreviousHoursOfThatPlaceOnly() {
         long locationId = newLocation("Estúdio").getId();
         workingHoursGateway.save(new WorkingHours(professionalId, locationId, List.of(MONDAY_MORNING)));
@@ -134,6 +139,7 @@ class JpaProfessionalPlacesGatewaysTest {
     }
 
     @Test
+    @DisplayName("Lugar sem horários fica fechado")
     void placeWithoutHoursIsClosed() {
         assertThat(workingHoursGateway.find(professionalId, null).getPeriods()).isEmpty();
         assertThat(workingHoursGateway.findAllByProfessional(professionalId)).isEmpty();

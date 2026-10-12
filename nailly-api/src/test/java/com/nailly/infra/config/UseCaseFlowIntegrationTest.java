@@ -6,6 +6,7 @@ import com.nailly.application.professional.RegisterProfessionalUseCase;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.user.UserGateway;
 import com.nailly.infra.persistence.appointment.JpaAppointmentGateway;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ class UseCaseFlowIntegrationTest {
     private UserGateway userGateway;
 
     @Test
+    @DisplayName("Casos de uso rodam dentro de transação")
     void useCasesAreWrappedInTransactions() {
         assertThat(AopUtils.isAopProxy(requestAppointment)).isTrue();
         assertThat(AopUtils.isAopProxy(registerProfessional)).isTrue();
@@ -41,6 +43,7 @@ class UseCaseFlowIntegrationTest {
     }
 
     @Test
+    @DisplayName("Falha desfaz tudo o que o caso de uso gravou")
     void failureRollsBackEverythingTheUseCaseWrote() {
         assertThatThrownBy(() -> registerProfessional.execute("rollback@nailly.com", "senha-forte", " ", null, null))
                 .isInstanceOf(DomainException.class)

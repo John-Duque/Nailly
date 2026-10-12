@@ -13,6 +13,7 @@ import com.nailly.infra.security.JwtConfig;
 import com.nailly.infra.security.ProblemDetailsSecurityHandler;
 import com.nailly.infra.security.SecurityConfig;
 import com.nailly.infra.security.TokenService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -57,6 +58,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Cliente se cadastra e recebe token")
     void customerRegistersAndReceivesToken() throws Exception {
         when(registerCustomer.execute("bia@nailly.com", "senha-forte", "Bia", "11999990000"))
                 .thenReturn(new AuthenticatedAccount(8L, Role.CUSTOMER, null, 20L));
@@ -81,6 +83,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Profissional se cadastra e recebe token")
     void professionalRegistersAndReceivesToken() throws Exception {
         when(registerProfessional.execute("ana@nailly.com", "senha-forte", "Ana", null, "Nail designer"))
                 .thenReturn(new AuthenticatedAccount(7L, Role.PROFESSIONAL, 10L, null));
@@ -99,6 +102,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Recusa cadastro inválido listando os campos")
     void invalidRegistrationIsRefused() throws Exception {
         mockMvc.perform(post("/auth/register/customer").contentType(MediaType.APPLICATION_JSON).content("""
                         {"email": "nao-e-email", "password": "curta"}
@@ -110,6 +114,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("E-mail já cadastrado vira 422")
     void emailAlreadyRegisteredBecomes422() throws Exception {
         when(registerProfessional.execute("ana@nailly.com", "senha-forte", "Ana", null, null))
                 .thenThrow(new DomainException("Este e-mail já está cadastrado."));
@@ -122,6 +127,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Login devolve token")
     void loginReturnsToken() throws Exception {
         when(authenticate.execute("ana@nailly.com", "senha-forte"))
                 .thenReturn(new AuthenticatedAccount(7L, Role.PROFESSIONAL, 10L, null));
@@ -136,6 +142,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("E-mail ou senha errados viram 401")
     void wrongCredentialsBecome401() throws Exception {
         when(authenticate.execute("ana@nailly.com", "errada123")).thenThrow(new InvalidCredentialsException());
 
@@ -148,6 +155,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Login exige e-mail e senha")
     void loginRequiresEmailAndPassword() throws Exception {
         mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest())

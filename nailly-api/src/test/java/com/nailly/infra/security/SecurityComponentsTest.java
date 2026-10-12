@@ -2,6 +2,7 @@ package com.nailly.infra.security;
 
 import com.nailly.application.user.AuthenticatedAccount;
 import com.nailly.domain.user.Role;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -40,6 +41,7 @@ class SecurityComponentsTest {
     }
 
     @Test
+    @DisplayName("Emite token assinado com papel e perfil")
     void issuesSignedTokenWithProfileClaims() {
         Instant now = Instant.now();
         AccessToken token = tokensAt(now).issue(new AuthenticatedAccount(7L, Role.PROFESSIONAL, 10L, null));
@@ -55,6 +57,7 @@ class SecurityComponentsTest {
     }
 
     @Test
+    @DisplayName("Recusa token vencido, alterado ou de outra chave")
     void rejectsExpiredOrTamperedTokens() {
         String expired = tokensAt(Instant.now().minus(Duration.ofDays(1)))
                 .issue(new AuthenticatedAccount(7L, Role.CUSTOMER, null, 20L)).getValue();
@@ -68,6 +71,7 @@ class SecurityComponentsTest {
     }
 
     @Test
+    @DisplayName("Recusa segredo com menos de 32 bytes")
     void refusesShortSecret() {
         assertThatThrownBy(() -> new JwtConfig("curto"))
                 .isInstanceOf(IllegalStateException.class)
@@ -75,6 +79,7 @@ class SecurityComponentsTest {
     }
 
     @Test
+    @DisplayName("Profissional só altera os próprios dados")
     void professionalOnlyManagesHerOwnData() {
         CurrentUser ana = professional(10L);
 
@@ -91,6 +96,7 @@ class SecurityComponentsTest {
     }
 
     @Test
+    @DisplayName("Cliente não age como profissional")
     void customerCannotActAsProfessional() {
         CurrentUser bia = customer(20L);
 
@@ -101,6 +107,7 @@ class SecurityComponentsTest {
     }
 
     @Test
+    @DisplayName("Só os participantes veem o agendamento")
     void onlyParticipantsSeeAnAppointment() {
         professional(10L).requireParticipant(20L, 10L);
         customer(20L).requireParticipant(20L, 10L);
@@ -115,6 +122,7 @@ class SecurityComponentsTest {
     }
 
     @Test
+    @DisplayName("Gera e confere hash de senha com BCrypt")
     void hashesPasswordsWithBcrypt() {
         BCryptPasswordHasher hasher = new BCryptPasswordHasher();
 

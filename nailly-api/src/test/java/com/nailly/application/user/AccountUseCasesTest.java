@@ -14,6 +14,7 @@ import com.nailly.domain.user.PasswordHasher;
 import com.nailly.domain.user.Role;
 import com.nailly.domain.user.User;
 import com.nailly.domain.user.UserGateway;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,9 +66,11 @@ class AccountUseCasesTest {
     }
 
     @Nested
+    @DisplayName("Cadastro de conta")
     class Registration {
 
         @Test
+        @DisplayName("Cadastra cliente com conta e e-mail normalizado")
         void registersCustomerWithAccount() {
             givenNewUserGetsId(7L);
             when(customerGateway.save(any())).thenAnswer(invocation -> {
@@ -89,6 +92,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Cadastra profissional com as regras padrão")
         void registersProfessionalWithDefaultRules() {
             givenNewUserGetsId(7L);
             when(professionalGateway.save(any())).thenAnswer(invocation -> {
@@ -110,6 +114,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Recusa e-mail já cadastrado")
         void refusesEmailAlreadyRegistered() {
             when(userGateway.existsByEmail("ana@nailly.com")).thenReturn(true);
             AccountRegistration registration = registration();
@@ -121,6 +126,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Recusa senha curta antes de gerar o hash")
         void refusesWeakPasswordBeforeHashing() {
             when(userGateway.existsByEmail("ana@nailly.com")).thenReturn(false);
             AccountRegistration registration = registration();
@@ -133,6 +139,7 @@ class AccountUseCasesTest {
     }
 
     @Nested
+    @DisplayName("Login")
     class Login {
 
         private AuthenticateUseCase useCase() {
@@ -140,6 +147,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Profissional recebe o id do seu perfil")
         void professionalReceivesHerProfile() {
             when(userGateway.findByEmail("ana@nailly.com")).thenReturn(Optional.of(storedUser(Role.PROFESSIONAL)));
             when(passwordHasher.matches(PASSWORD, "hash")).thenReturn(true);
@@ -155,6 +163,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Cliente recebe o id do seu perfil")
         void customerReceivesHerProfile() {
             when(userGateway.findByEmail("ana@nailly.com")).thenReturn(Optional.of(storedUser(Role.CUSTOMER)));
             when(passwordHasher.matches(PASSWORD, "hash")).thenReturn(true);
@@ -168,6 +177,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Admin entra sem perfil de cliente ou profissional")
         void adminHasNoProfile() {
             when(userGateway.findByEmail("ana@nailly.com")).thenReturn(Optional.of(storedUser(Role.ADMIN)));
             when(passwordHasher.matches(PASSWORD, "hash")).thenReturn(true);
@@ -180,6 +190,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Recusa senha errada")
         void wrongPasswordIsRefused() {
             when(userGateway.findByEmail("ana@nailly.com")).thenReturn(Optional.of(storedUser(Role.CUSTOMER)));
             when(passwordHasher.matches("errada123", "hash")).thenReturn(false);
@@ -191,6 +202,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Recusa conta desativada com a mesma mensagem")
         void deactivatedAccountIsRefusedWithSameMessage() {
             User deactivated = storedUser(Role.CUSTOMER);
             deactivated.deactivate();
@@ -203,6 +215,7 @@ class AccountUseCasesTest {
         }
 
         @Test
+        @DisplayName("Recusa e-mail inexistente ou inválido com a mesma mensagem")
         void unknownOrMalformedEmailIsRefusedWithSameMessage() {
             when(userGateway.findByEmail("nao@existe.com")).thenReturn(Optional.empty());
             AuthenticateUseCase useCase = useCase();

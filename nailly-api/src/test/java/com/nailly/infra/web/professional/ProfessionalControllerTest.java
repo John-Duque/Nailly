@@ -22,6 +22,7 @@ import com.nailly.infra.security.JwtConfig;
 import com.nailly.infra.security.ProblemDetailsSecurityHandler;
 import com.nailly.infra.security.SecurityConfig;
 import com.nailly.infra.security.TokenService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,6 +103,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Perfil da profissional é público")
     void profileIsPublic() throws Exception {
         when(getProfessional.execute(PROFESSIONAL_ID)).thenReturn(professional());
 
@@ -121,6 +123,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Profissional inexistente vira 404")
     void unknownProfessionalBecomes404() throws Exception {
         when(getProfessional.execute(99L)).thenThrow(new NotFoundException("Profissional não encontrada."));
 
@@ -132,6 +135,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Id não numérico vira 400")
     void nonNumericIdBecomes400() throws Exception {
         mockMvc.perform(get("/professionals/abc"))
                 .andExpect(status().isBadRequest())
@@ -139,6 +143,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("A própria profissional atualiza o perfil")
     void ownerUpdatesProfile() throws Exception {
         when(updateProfile.execute(PROFESSIONAL_ID, "Ana Paula", null, "Bio")).thenReturn(professional());
 
@@ -150,6 +155,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Alterações exigem login")
     void changesRequireLogin() throws Exception {
         mockMvc.perform(json(put("/professionals/{id}/profile", PROFESSIONAL_ID), "{\"name\": \"Ana\"}"))
                 .andExpect(status().isUnauthorized())
@@ -162,6 +168,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Outra profissional ou cliente não altera os dados")
     void anotherProfessionalCannotChangeData() throws Exception {
         mockMvc.perform(json(post("/professionals/{id}/deactivate", PROFESSIONAL_ID), "{}")
                         .header(HttpHeaders.AUTHORIZATION, professionalToken(99L)))
@@ -176,6 +183,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Corpo inválido lista todos os campos com erro")
     void invalidBodyListsEveryField() throws Exception {
         mockMvc.perform(asOwner(json(put("/professionals/{id}/profile", PROFESSIONAL_ID), """
                         {"name": " ", "phone": "123456789012345678901"}
@@ -190,6 +198,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Regra de negócio vira 422")
     void businessRuleBecomes422() throws Exception {
         when(updateApprovalPolicy.execute(eq(PROFESSIONAL_ID), any()))
                 .thenThrow(new DomainException("O prazo para responder um pedido deve ser maior que zero."));
@@ -202,6 +211,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Atualiza as regras de aprovação")
     void updatesApprovalPolicy() throws Exception {
         when(updateApprovalPolicy.execute(eq(PROFESSIONAL_ID), any())).thenReturn(professional());
 
@@ -216,6 +226,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Valor desconhecido de enum vira 400")
     void unknownEnumValueBecomes400() throws Exception {
         mockMvc.perform(asOwner(json(put("/professionals/{id}/approval-policy", PROFESSIONAL_ID), """
                         {"bookingApproval": "SOMETIMES", "homeVisitApproval": "MANUAL"}
@@ -226,6 +237,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Atualiza as regras de domicílio")
     void updatesHomeVisitPolicy() throws Exception {
         when(updateHomeVisitPolicy.execute(eq(PROFESSIONAL_ID), any())).thenReturn(professional());
 
@@ -243,6 +255,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Desligar domicílio não exige origem nem faixas")
     void turningHomeVisitOffNeedsNoOriginOrFees() throws Exception {
         when(updateHomeVisitPolicy.execute(eq(PROFESSIONAL_ID), any())).thenReturn(professional());
 
@@ -254,6 +267,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Recusa faixa de taxa inválida")
     void invalidFeeBandIsRefused() throws Exception {
         mockMvc.perform(asOwner(json(put("/professionals/{id}/home-visit-policy", PROFESSIONAL_ID), """
                         {"offered": true, "originLatitude": 91, "originLongitude": 0,
@@ -266,6 +280,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("A própria profissional desativa o perfil")
     void ownerDeactivatesProfile() throws Exception {
         when(deactivateProfessional.execute(PROFESSIONAL_ID)).thenReturn(professional());
 
@@ -275,6 +290,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("A própria profissional vê a agenda do período")
     void ownerSeesAgendaOfThePeriod() throws Exception {
         Instant from = Instant.parse("2026-10-13T03:00:00Z");
         Instant to = Instant.parse("2026-10-14T03:00:00Z");
@@ -288,6 +304,7 @@ class ProfessionalControllerTest {
     }
 
     @Test
+    @DisplayName("Agenda exige período completo e a própria profissional")
     void agendaRequiresPeriodAndOwner() throws Exception {
         mockMvc.perform(asOwner(get("/professionals/{id}/agenda", PROFESSIONAL_ID).param("from", "2026-10-13T03:00:00Z")))
                 .andExpect(status().isBadRequest())

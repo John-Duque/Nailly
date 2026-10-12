@@ -13,6 +13,7 @@ import com.nailly.domain.shared.Address;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.NotFoundException;
 import com.nailly.domain.shared.Place;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -72,6 +73,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Cadastra local de atendimento")
     void addsLocation() {
         givenProfessional();
         givenLocationSaveReturnsArgument();
@@ -84,6 +86,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Edita o próprio local")
     void updatesOwnLocation() {
         givenLocation(PROFESSIONAL_ID);
         givenLocationSaveReturnsArgument();
@@ -96,6 +99,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Local de outra profissional dá não encontrado")
     void locationOfAnotherProfessionalIsNotFound() {
         givenLocation(99L);
         DeactivateProfessionalLocationUseCase useCase = new DeactivateProfessionalLocationUseCase(locationGateway);
@@ -107,6 +111,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Desativa o próprio local")
     void deactivatesOwnLocation() {
         givenLocation(PROFESSIONAL_ID);
         givenLocationSaveReturnsArgument();
@@ -116,6 +121,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Lista os locais ativos")
     void listsActiveLocations() {
         List<ProfessionalLocation> locations = List.of(new ProfessionalLocation(LOCATION_ID, PROFESSIONAL_ID, STUDIO));
         when(locationGateway.findActiveByProfessional(PROFESSIONAL_ID)).thenReturn(locations);
@@ -125,6 +131,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Define o horário de funcionamento de um local próprio")
     void definesWorkingHoursOfOwnLocation() {
         givenProfessional();
         givenLocation(PROFESSIONAL_ID);
@@ -137,6 +144,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Define o horário a domicílio sem local")
     void definesHomeVisitHoursWithoutLocation() {
         givenProfessional();
         when(workingHoursGateway.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -148,6 +156,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Recusa horário para local desativado")
     void refusesHoursForInactiveLocation() {
         givenProfessional();
         givenLocation(PROFESSIONAL_ID).deactivate();
@@ -160,6 +169,7 @@ class ProfessionalPlacesUseCasesTest {
     }
 
     @Test
+    @DisplayName("Lista os horários de funcionamento")
     void listsWorkingHours() {
         List<WorkingHours> all = List.of(new WorkingHours(PROFESSIONAL_ID, null, MONDAY));
         when(workingHoursGateway.findAllByProfessional(PROFESSIONAL_ID)).thenReturn(all);

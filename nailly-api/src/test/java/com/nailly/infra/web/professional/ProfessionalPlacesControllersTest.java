@@ -19,6 +19,7 @@ import com.nailly.infra.security.JwtConfig;
 import com.nailly.infra.security.ProblemDetailsSecurityHandler;
 import com.nailly.infra.security.SecurityConfig;
 import com.nailly.infra.security.TokenService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -99,6 +100,7 @@ class ProfessionalPlacesControllersTest {
     }
 
     @Test
+    @DisplayName("Locais de atendimento são públicos")
     void locationsArePublic() throws Exception {
         when(listLocations.execute(PROFESSIONAL_ID)).thenReturn(List.of(studio()));
 
@@ -110,6 +112,7 @@ class ProfessionalPlacesControllersTest {
     }
 
     @Test
+    @DisplayName("A própria profissional cadastra, edita e desativa locais")
     void ownerManagesLocations() throws Exception {
         ProfessionalLocation closed = studio();
         closed.deactivate();
@@ -131,6 +134,7 @@ class ProfessionalPlacesControllersTest {
     }
 
     @Test
+    @DisplayName("Outra profissional não altera os locais")
     void anotherProfessionalCannotChangeLocations() throws Exception {
         mockMvc.perform(post("/professionals/{id}/locations", PROFESSIONAL_ID)
                         .header(HttpHeaders.AUTHORIZATION, professionalToken(99L))
@@ -140,6 +144,7 @@ class ProfessionalPlacesControllersTest {
     }
 
     @Test
+    @DisplayName("Horários de funcionamento são públicos")
     void workingHoursArePublic() throws Exception {
         when(listWorkingHours.execute(PROFESSIONAL_ID))
                 .thenReturn(List.of(new WorkingHours(PROFESSIONAL_ID, LOCATION_ID, MONDAY),
@@ -156,6 +161,7 @@ class ProfessionalPlacesControllersTest {
     }
 
     @Test
+    @DisplayName("A própria profissional define os horários")
     void ownerDefinesWorkingHours() throws Exception {
         when(defineWorkingHours.execute(PROFESSIONAL_ID, LOCATION_ID, MONDAY))
                 .thenReturn(new WorkingHours(PROFESSIONAL_ID, LOCATION_ID, MONDAY));
@@ -172,6 +178,7 @@ class ProfessionalPlacesControllersTest {
     }
 
     @Test
+    @DisplayName("Recusa horários inválidos")
     void invalidWorkingHoursAreRefused() throws Exception {
         mockMvc.perform(asOwner(put("/professionals/{id}/working-hours", PROFESSIONAL_ID))
                         .contentType(MediaType.APPLICATION_JSON).content("""
@@ -187,6 +194,7 @@ class ProfessionalPlacesControllersTest {
     }
 
     @Test
+    @DisplayName("Horários sobrepostos viram 422")
     void overlappingHoursBecome422() throws Exception {
         when(defineWorkingHours.execute(eq(PROFESSIONAL_ID), isNull(), any()))
                 .thenThrow(new DomainException("Há horários sobrepostos no mesmo dia."));

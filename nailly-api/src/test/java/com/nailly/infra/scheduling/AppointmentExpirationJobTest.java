@@ -1,6 +1,7 @@
 package com.nailly.infra.scheduling;
 
 import com.nailly.application.appointment.ExpirePendingAppointmentsUseCase;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -17,6 +18,7 @@ class AppointmentExpirationJobTest {
     private ExpirePendingAppointmentsUseCase expirePendingAppointments;
 
     @Test
+    @DisplayName("Rotina chama o caso de uso de expiração a cada execução")
     void runsTheExpirationUseCase() {
         when(expirePendingAppointments.execute()).thenReturn(2, 0);
         AppointmentExpirationJob job = new AppointmentExpirationJob(expirePendingAppointments);
