@@ -4,11 +4,15 @@ import com.nailly.domain.professional.ApprovalMode;
 import com.nailly.domain.professional.ApprovalPolicy;
 import com.nailly.domain.professional.HomeVisitFee;
 import com.nailly.domain.professional.HomeVisitPolicy;
+import com.nailly.domain.professional.WorkingPeriod;
+import com.nailly.domain.shared.Address;
 import com.nailly.domain.shared.GeoPoint;
 import com.nailly.domain.shared.Money;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +61,24 @@ class ValueObjectEqualityTest {
         assertValueEquality(fee, new HomeVisitFee(new BigDecimal("5.0"), Money.of("10")),
                 new HomeVisitFee(new BigDecimal("6"), Money.of("10")),
                 new HomeVisitFee(new BigDecimal("5"), Money.of("11")));
+    }
+
+    @Test
+    void address() {
+        assertValueEquality(
+                new Address("Rua A", "10", null, "Centro", "São Paulo", "SP", "01000-000"),
+                new Address("Rua A", "10", " ", "Centro", "São Paulo", "sp", "01000000"),
+                new Address("Rua A", "11", null, "Centro", "São Paulo", "SP", "01000-000"));
+    }
+
+    @Test
+    void workingPeriod() {
+        WorkingPeriod morning = new WorkingPeriod(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(12, 0));
+
+        assertValueEquality(morning, new WorkingPeriod(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(12, 0)),
+                new WorkingPeriod(DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(12, 0)),
+                new WorkingPeriod(DayOfWeek.MONDAY, LocalTime.of(8, 0), LocalTime.of(12, 0)),
+                new WorkingPeriod(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(13, 0)));
     }
 
     @Test
