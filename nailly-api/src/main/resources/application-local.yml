@@ -1,0 +1,14 @@
+# Perfil de desenvolvimento local (MySQL no Docker).
+# Só valores sem segredo: a senha vem do arquivo .env (fora do Git).
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/nailly?allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
+
+logging:
+  level:
+    com.nailly: DEBUG
