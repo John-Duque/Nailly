@@ -20,3 +20,9 @@ spring:
   flyway:
     # Desligado nos testes: as migrations serão escritas para o MySQL
     enabled: false
+
+
+# Testes dos endpoints sem autenticação; o SecurityConfigTest cobre o caso fechado.
+nailly:
+  security:
+    open-endpoints: true
