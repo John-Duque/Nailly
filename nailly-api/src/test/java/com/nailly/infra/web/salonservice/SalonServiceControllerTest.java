@@ -6,18 +6,27 @@ import com.nailly.application.salonservice.ListProcedureTypesUseCase;
 import com.nailly.application.salonservice.ListProfessionalServicesUseCase;
 import com.nailly.application.salonservice.SalonServiceCommand;
 import com.nailly.application.salonservice.UpdateSalonServiceUseCase;
+import com.nailly.application.user.AuthenticatedAccount;
 import com.nailly.domain.salonservice.BodyArea;
 import com.nailly.domain.shared.Money;
 import com.nailly.domain.shared.NotFoundException;
+import com.nailly.domain.user.Role;
+import com.nailly.infra.config.ClockConfig;
+import com.nailly.infra.security.JwtConfig;
+import com.nailly.infra.security.ProblemDetailsSecurityHandler;
 import com.nailly.infra.security.SecurityConfig;
+import com.nailly.infra.security.TokenService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.List;
 
@@ -40,7 +49,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({SalonServiceController.class, ProcedureTypeController.class})
-@Import(SecurityConfig.class)
+@ActiveProfiles("test")
+// Segurança real: mesmas regras de acesso e tokens assinados pela mesma chave da aplicação
+@Import({SecurityConfig.class, JwtConfig.class, TokenService.class, ProblemDetailsSecurityHandler.class,
+        ClockConfig.class})
 class SalonServiceControllerTest {
 
     private static final String VALID_SERVICE = """
@@ -50,6 +62,8 @@ class SalonServiceControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private TokenService tokens;
 
     @MockitoBean
     private CreateSalonServiceUseCase createService;
@@ -62,8 +76,18 @@ class SalonServiceControllerTest {
     @MockitoBean
     private ListProcedureTypesUseCase listProcedureTypes;
 
+    /** Cabeçalho Authorization de uma profissional logada. */
+    private String professionalToken(long professionalId) {
+        return "Bearer " + tokens.issue(
+                new AuthenticatedAccount(100L + professionalId, Role.PROFESSIONAL, professionalId, null)).getValue();
+    }
+
+    private MockHttpServletRequestBuilder asOwner(MockHttpServletRequestBuilder request) {
+        return request.header(HttpHeaders.AUTHORIZATION, professionalToken(PROFESSIONAL_ID));
+    }
+
     @Test
-    void listsProcedureTypes() throws Exception {
+    void procedureTypesArePublic() throws Exception {
         when(listProcedureTypes.execute()).thenReturn(List.of(GEL));
 
         mockMvc.perform(get("/procedure-types"))
@@ -73,7 +97,7 @@ class SalonServiceControllerTest {
     }
 
     @Test
-    void listsCatalogOfProfessional() throws Exception {
+    void catalogIsPublic() throws Exception {
         when(listServices.execute(PROFESSIONAL_ID)).thenReturn(List.of(service()));
 
         mockMvc.perform(get("/professionals/{id}/services", PROFESSIONAL_ID))
@@ -91,10 +115,10 @@ class SalonServiceControllerTest {
     }
 
     @Test
-    void createsService() throws Exception {
+    void ownerCreatesService() throws Exception {
         when(createService.execute(eq(PROFESSIONAL_ID), any())).thenReturn(service());
 
-        mockMvc.perform(post("/professionals/{id}/services", PROFESSIONAL_ID)
+        mockMvc.perform(asOwner(post("/professionals/{id}/services", PROFESSIONAL_ID))
                         .contentType(MediaType.APPLICATION_JSON).content(VALID_SERVICE))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location",
@@ -113,8 +137,20 @@ class SalonServiceControllerTest {
     }
 
     @Test
-    void invalidServiceIsRefused() throws Exception {
+    void onlyTheOwnerChangesTheCatalog() throws Exception {
         mockMvc.perform(post("/professionals/{id}/services", PROFESSIONAL_ID)
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID_SERVICE))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/professionals/{id}/services", PROFESSIONAL_ID)
+                        .header(HttpHeaders.AUTHORIZATION, professionalToken(99L))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID_SERVICE))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(createService);
+    }
+
+    @Test
+    void invalidServiceIsRefused() throws Exception {
+        mockMvc.perform(asOwner(post("/professionals/{id}/services", PROFESSIONAL_ID))
                         .contentType(MediaType.APPLICATION_JSON).content("""
                                 {"procedureTypeId": 2, "title": "", "bodyArea": "HANDS",
                                  "durationMinutes": 1441, "price": 10.001}
@@ -126,10 +162,10 @@ class SalonServiceControllerTest {
     }
 
     @Test
-    void updatesService() throws Exception {
+    void ownerUpdatesService() throws Exception {
         when(updateService.execute(eq(PROFESSIONAL_ID), eq(SERVICE_ID), any())).thenReturn(service());
 
-        mockMvc.perform(put("/professionals/{id}/services/{serviceId}", PROFESSIONAL_ID, SERVICE_ID)
+        mockMvc.perform(asOwner(put("/professionals/{id}/services/{serviceId}", PROFESSIONAL_ID, SERVICE_ID))
                         .contentType(MediaType.APPLICATION_JSON).content(VALID_SERVICE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(SERVICE_ID));
@@ -140,17 +176,18 @@ class SalonServiceControllerTest {
         when(updateService.execute(eq(PROFESSIONAL_ID), eq(99L), any()))
                 .thenThrow(new NotFoundException("Serviço não encontrado."));
 
-        mockMvc.perform(put("/professionals/{id}/services/99", PROFESSIONAL_ID)
+        mockMvc.perform(asOwner(put("/professionals/{id}/services/99", PROFESSIONAL_ID))
                         .contentType(MediaType.APPLICATION_JSON).content(VALID_SERVICE))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value("Serviço não encontrado."));
     }
 
     @Test
-    void deactivatesService() throws Exception {
+    void ownerDeactivatesService() throws Exception {
         when(deactivateService.execute(PROFESSIONAL_ID, SERVICE_ID)).thenReturn(service());
 
-        mockMvc.perform(post("/professionals/{id}/services/{serviceId}/deactivate", PROFESSIONAL_ID, SERVICE_ID))
+        mockMvc.perform(asOwner(post("/professionals/{id}/services/{serviceId}/deactivate",
+                        PROFESSIONAL_ID, SERVICE_ID)))
                 .andExpect(status().isOk());
         verify(deactivateService).execute(PROFESSIONAL_ID, SERVICE_ID);
     }
