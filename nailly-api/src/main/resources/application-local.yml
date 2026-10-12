@@ -12,3 +12,8 @@ spring:
 logging:
   level:
     com.nailly: DEBUG
+
+# Endpoints abertos para testar a API localmente (sem autenticação ainda).
+nailly:
+  security:
+    open-endpoints: true
