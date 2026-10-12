@@ -9,8 +9,9 @@ import com.nailly.domain.shared.NotFoundException;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
@@ -22,8 +23,9 @@ import static com.nailly.infra.persistence.PersistenceTestData.newProfessional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
+@ActiveProfiles("test")
+@Import(JpaProfessionalGateway.class)
 class JpaProfessionalGatewayTest {
 
     @Autowired
@@ -107,8 +109,9 @@ class JpaProfessionalGatewayTest {
 
         assertThat(gateway.findByIdForUpdate(saved.getId())).get()
                 .extracting(Professional::getUserId).isEqualTo(USER_ID);
-        assertThat(gateway.existsByUserId(USER_ID)).isTrue();
-        assertThat(gateway.existsByUserId(OTHER_USER_ID)).isFalse();
+        assertThat(gateway.findByUserId(USER_ID)).get()
+                .extracting(Professional::getId).isEqualTo(saved.getId());
+        assertThat(gateway.findByUserId(OTHER_USER_ID)).isEmpty();
     }
 
     @Test
