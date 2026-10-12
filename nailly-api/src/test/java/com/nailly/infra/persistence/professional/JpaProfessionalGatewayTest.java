@@ -7,10 +7,12 @@ import com.nailly.domain.professional.Professional;
 import com.nailly.domain.professional.ProfessionalGateway;
 import com.nailly.domain.shared.NotFoundException;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
@@ -22,8 +24,9 @@ import static com.nailly.infra.persistence.PersistenceTestData.newProfessional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
+@ActiveProfiles("test")
+@Import(JpaProfessionalGateway.class)
 class JpaProfessionalGatewayTest {
 
     @Autowired
@@ -44,6 +47,7 @@ class JpaProfessionalGatewayTest {
     }
 
     @Test
+    @DisplayName("Grava e lê todos os dados da profissional")
     void savesAndLoadsAllData() {
         Professional saved = gateway.save(newProfessional(USER_ID, ApprovalMode.MANUAL));
 
@@ -65,6 +69,7 @@ class JpaProfessionalGatewayTest {
     }
 
     @Test
+    @DisplayName("Atualiza as faixas de taxa")
     void updatesFeeBandsKeepingExistingDistances() {
         Professional professional = stored();
         professional.changeHomeVisitPolicy(new HomeVisitPolicy(true, ORIGIN,
@@ -77,6 +82,7 @@ class JpaProfessionalGatewayTest {
     }
 
     @Test
+    @DisplayName("Desligar domicílio remove origem e faixas")
     void turningHomeVisitOffRemovesOriginAndBands() {
         Professional professional = stored();
         professional.changeHomeVisitPolicy(HomeVisitPolicy.notOffered());
@@ -87,6 +93,7 @@ class JpaProfessionalGatewayTest {
     }
 
     @Test
+    @DisplayName("Atualiza o perfil e grava a desativação")
     void updatesProfileAndKeepsDeactivation() {
         Professional professional = stored();
         professional.updateProfile("Ana Paula", null, null);
@@ -101,23 +108,27 @@ class JpaProfessionalGatewayTest {
     }
 
     @Test
+    @DisplayName("Busca com bloqueio e pelo usuário")
     void findsForUpdateAndByUser() {
         Professional saved = gateway.save(newProfessional(USER_ID, ApprovalMode.AUTOMATIC));
         entityManager.flush();
 
         assertThat(gateway.findByIdForUpdate(saved.getId())).get()
                 .extracting(Professional::getUserId).isEqualTo(USER_ID);
-        assertThat(gateway.existsByUserId(USER_ID)).isTrue();
-        assertThat(gateway.existsByUserId(OTHER_USER_ID)).isFalse();
+        assertThat(gateway.findByUserId(USER_ID)).get()
+                .extracting(Professional::getId).isEqualTo(saved.getId());
+        assertThat(gateway.findByUserId(OTHER_USER_ID)).isEmpty();
     }
 
     @Test
+    @DisplayName("Id inexistente não é encontrado")
     void unknownIdIsEmpty() {
         assertThat(gateway.findById(Long.MAX_VALUE)).isEmpty();
         assertThat(gateway.findByIdForUpdate(Long.MAX_VALUE)).isEmpty();
     }
 
     @Test
+    @DisplayName("Salvar profissional inexistente dá não encontrada")
     void savingUnknownIdIsNotFound() {
         Professional ghost = new Professional(Long.MAX_VALUE, USER_ID, "Ana", null, null,
                 ApprovalPolicy.defaults(), HomeVisitPolicy.notOffered());

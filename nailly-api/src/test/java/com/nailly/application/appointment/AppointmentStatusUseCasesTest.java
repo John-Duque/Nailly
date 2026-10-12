@@ -5,6 +5,7 @@ import com.nailly.domain.appointment.AppointmentGateway;
 import com.nailly.domain.appointment.AppointmentStatus;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.NotFoundException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,9 +50,11 @@ class AppointmentStatusUseCasesTest {
     }
 
     @Nested
+    @DisplayName("Confirmar pedido")
     class Confirm {
 
         @Test
+        @DisplayName("Confirma pedido pendente e salva")
         void confirmsPendingRequest() {
             Appointment appointment = pending();
             given(appointment);
@@ -65,6 +68,7 @@ class AppointmentStatusUseCasesTest {
         }
 
         @Test
+        @DisplayName("Não salva quando o domínio recusa")
         void doesNotSaveWhenDomainRefuses() {
             when(appointmentGateway.getById(APPOINTMENT_ID)).thenCallRealMethod();
             when(appointmentGateway.findById(APPOINTMENT_ID)).thenReturn(Optional.of(confirmed()));
@@ -77,6 +81,7 @@ class AppointmentStatusUseCasesTest {
         }
 
         @Test
+        @DisplayName("Agendamento inexistente dá não encontrado")
         void unknownAppointmentIsNotFound() {
             when(appointmentGateway.getById(APPOINTMENT_ID)).thenCallRealMethod();
             when(appointmentGateway.findById(APPOINTMENT_ID)).thenReturn(Optional.empty());
@@ -89,6 +94,7 @@ class AppointmentStatusUseCasesTest {
     }
 
     @Test
+    @DisplayName("Busca o agendamento")
     void getsAppointment() {
         Appointment appointment = confirmed();
         when(appointmentGateway.getById(APPOINTMENT_ID)).thenCallRealMethod();
@@ -98,6 +104,7 @@ class AppointmentStatusUseCasesTest {
     }
 
     @Test
+    @DisplayName("Recusa pedido pendente com motivo")
     void rejectsPendingRequest() {
         Appointment appointment = pending();
         given(appointment);
@@ -110,6 +117,7 @@ class AppointmentStatusUseCasesTest {
     }
 
     @Test
+    @DisplayName("Cancela mantendo o histórico")
     void cancelsKeepingHistory() {
         Appointment appointment = confirmed();
         given(appointment);
@@ -123,6 +131,7 @@ class AppointmentStatusUseCasesTest {
     }
 
     @Test
+    @DisplayName("Conclui depois do horário marcado")
     void completesAfterStart() {
         Appointment appointment = confirmed();
         given(appointment);
@@ -133,6 +142,7 @@ class AppointmentStatusUseCasesTest {
     }
 
     @Test
+    @DisplayName("Marca falta depois do horário marcado")
     void marksNoShowAfterStart() {
         Appointment appointment = confirmed();
         given(appointment);
@@ -144,9 +154,11 @@ class AppointmentStatusUseCasesTest {
     }
 
     @Nested
+    @DisplayName("Expirar pedidos pendentes")
     class ExpirePending {
 
         @Test
+        @DisplayName("Expira todos os pedidos pendentes fora do prazo")
         void expiresEveryPendingRequestPastDeadline() {
             Instant afterDeadline = NOW.plusSeconds(3600);
             Appointment first = pending();
@@ -162,6 +174,7 @@ class AppointmentStatusUseCasesTest {
         }
 
         @Test
+        @DisplayName("Não faz nada quando nenhum pedido venceu")
         void doesNothingWhenNoRequestExpired() {
             when(appointmentGateway.findPendingExpiredUntil(NOW)).thenReturn(List.of());
 

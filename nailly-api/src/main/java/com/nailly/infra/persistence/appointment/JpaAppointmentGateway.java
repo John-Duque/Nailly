@@ -50,8 +50,24 @@ public class JpaAppointmentGateway implements AppointmentGateway {
     @Override
     @Transactional(readOnly = true)
     public List<Appointment> findPendingExpiredUntil(Instant now) {
-        return repository.findByStatusAndExpiresAtLessThanEqual(AppointmentStatus.PENDING, now).stream()
-                .map(AppointmentMapper::toDomain)
-                .toList();
+        return toDomain(repository.findByStatusAndExpiresAtLessThanEqual(AppointmentStatus.PENDING, now));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Appointment> findByProfessionalBetween(long professionalId, Instant from, Instant to) {
+        return toDomain(repository.findByProfessionalIdAndStartAtLessThanAndEndAtGreaterThanOrderByStartAt(
+                professionalId, to, from));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Appointment> findByCustomerBetween(long customerId, Instant from, Instant to) {
+        return toDomain(repository.findByCustomerIdAndStartAtLessThanAndEndAtGreaterThanOrderByStartAt(
+                customerId, to, from));
+    }
+
+    private static List<Appointment> toDomain(List<AppointmentEntity> entities) {
+        return entities.stream().map(AppointmentMapper::toDomain).toList();
     }
 }

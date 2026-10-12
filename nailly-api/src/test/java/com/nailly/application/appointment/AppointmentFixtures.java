@@ -2,21 +2,29 @@ package com.nailly.application.appointment;
 
 import com.nailly.domain.appointment.Appointment;
 import com.nailly.domain.appointment.ServiceLocation;
+import com.nailly.domain.customer.CustomerAddress;
 import com.nailly.domain.professional.ApprovalMode;
 import com.nailly.domain.professional.ApprovalPolicy;
 import com.nailly.domain.professional.HomeVisitFee;
 import com.nailly.domain.professional.HomeVisitPolicy;
 import com.nailly.domain.professional.Professional;
+import com.nailly.domain.professional.ProfessionalLocation;
+import com.nailly.domain.professional.WorkingHours;
+import com.nailly.domain.professional.WorkingPeriod;
 import com.nailly.domain.salonservice.BodyArea;
 import com.nailly.domain.salonservice.ProcedureType;
 import com.nailly.domain.salonservice.SalonService;
 import com.nailly.domain.salonservice.ServiceDetails;
+import com.nailly.domain.shared.Address;
 import com.nailly.domain.shared.GeoPoint;
 import com.nailly.domain.shared.Money;
+import com.nailly.domain.shared.Place;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -35,8 +43,27 @@ final class AppointmentFixtures {
     private AppointmentFixtures() {
     }
 
+    static final long LOCATION_ID = 3L;
+    static final long ADDRESS_ID = 4L;
+
     static Clock clockAt(Instant instant) {
         return Clock.fixed(instant, ZoneOffset.UTC);
+    }
+
+    static ProfessionalLocation location() {
+        return new ProfessionalLocation(LOCATION_ID, PROFESSIONAL_ID, new Place("Estúdio",
+                new Address("Rua A", "10", null, "Centro", "São Paulo", "SP", "01000-000"), ORIGIN));
+    }
+
+    static CustomerAddress customerAddress(GeoPoint location) {
+        return new CustomerAddress(ADDRESS_ID, CUSTOMER_ID, new Place("Casa",
+                new Address("Rua B", "20", "Apto 3", "Jardins", "São Paulo", "SP", "01400000"), location));
+    }
+
+    /** START (13/10/2026 13:00 UTC) é terça às 10:00 em São Paulo. */
+    static WorkingHours openTuesday(Long locationId) {
+        return new WorkingHours(PROFESSIONAL_ID, locationId,
+                List.of(new WorkingPeriod(DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(18, 0))));
     }
 
     static Professional professional(ApprovalMode approval) {

@@ -38,10 +38,11 @@ Regras: tipo em inglês, descrição em português, no imperativo e com até 70 
 ## Fluxo do dia a dia
 1. `git checkout develop` e `git pull`
 2. `git checkout -b feat/nome-da-funcionalidade`
-3. Commits no padrão e `git push -u origin feat/nome-da-funcionalidade`
-4. `gh pr create --base develop --fill`, esperar os checks e fazer o squash merge
-5. Promover: PR `develop` para `staging` e depois `staging` para `main`
-6. O deploy para `production` espera aprovação manual em Actions > Review deployments
+3. Antes de subir, rode `./mvnw verify` dentro do serviço alterado (ex.: `nailly-api/`): é o mesmo build, testes e cobertura que o CI roda
+4. Commits no padrão e `git push -u origin feat/nome-da-funcionalidade`
+5. `gh pr create --base develop --fill`, esperar os checks e fazer o squash merge
+6. Promover: PR `develop` para `staging` e depois `staging` para `main`
+7. O deploy para `production` espera aprovação manual em Actions > Review deployments
 
 ## Correção urgente em produção
 1. Sai uma `fix/...` da `main` e entra na `main` por PR (merge commit). **Não apague a branch** nesse merge.
