@@ -2,6 +2,7 @@ package com.nailly.domain.professional;
 
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.GeoPoint;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,6 +20,7 @@ class ProfessionalTest {
     }
 
     @Test
+    @DisplayName("Cria profissional ativa tirando espaços dos textos")
     void createsActiveProfessionalWithNormalizedTexts() {
         Professional professional = new Professional(1L, 7L, " Ana ", " ", "  Manicure há 10 anos ",
                 APPROVAL, HomeVisitPolicy.notOffered());
@@ -34,6 +36,7 @@ class ProfessionalTest {
     }
 
     @Test
+    @DisplayName("Cadastro usa as regras padrão de aprovação e sem domicílio")
     void registerUsesDatabaseDefaults() {
         Professional professional = Professional.register(7L, "Ana", "11999990000", null);
 
@@ -46,6 +49,7 @@ class ProfessionalTest {
     }
 
     @Test
+    @DisplayName("Atualiza nome, telefone e bio")
     void updatesProfile() {
         Professional professional = ana();
 
@@ -57,6 +61,7 @@ class ProfessionalTest {
     }
 
     @Test
+    @DisplayName("Troca as regras de aprovação e de domicílio")
     void changesPolicies() {
         Professional professional = ana();
         ApprovalPolicy manual = new ApprovalPolicy(ApprovalMode.MANUAL, ApprovalMode.MANUAL, 60);
@@ -70,6 +75,7 @@ class ProfessionalTest {
     }
 
     @Test
+    @DisplayName("Pode ser desativada")
     void canBeDeactivated() {
         Professional professional = ana();
 
@@ -79,6 +85,7 @@ class ProfessionalTest {
     }
 
     @Test
+    @DisplayName("Exige o nome")
     void requiresName() {
         Professional professional = ana();
 
@@ -88,6 +95,7 @@ class ProfessionalTest {
     }
 
     @Test
+    @DisplayName("Exige as regras de aprovação e de domicílio")
     void requiresPolicies() {
         Professional professional = ana();
 

@@ -31,8 +31,8 @@ public class JpaProfessionalGateway implements ProfessionalGateway {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsByUserId(long userId) {
-        return repository.existsByUserId(userId);
+    public Optional<Professional> findByUserId(long userId) {
+        return repository.findByUserId(userId).map(ProfessionalMapper::toDomain);
     }
 
     @Override

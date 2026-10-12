@@ -2,6 +2,7 @@ package com.nailly.domain.salonservice;
 
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.Money;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -15,6 +16,7 @@ class SalonServiceTest {
     private static final Money PRICE = Money.of("80");
 
     @Test
+    @DisplayName("Cria serviço ativo tirando espaços dos textos")
     void createsActiveServiceWithNormalizedTexts() {
         ServiceDetails details = new ServiceDetails(GEL, " Gel nas mãos ", " ", BodyArea.HANDS, 90, PRICE, false);
         SalonService service = new SalonService(5L, 10L, details);
@@ -28,6 +30,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Pode ser desativado")
     void canBeDeactivated() {
         SalonService service = new SalonService(5L, 10L,
                 new ServiceDetails(GEL, "Gel", null, BodyArea.HANDS, 90, PRICE, true));
@@ -38,6 +41,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Atualiza os dados do serviço")
     void updatesDetails() {
         SalonService service = new SalonService(5L, 10L,
                 new ServiceDetails(GEL, "Gel", null, BodyArea.HANDS, 90, PRICE, true));
@@ -54,6 +58,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Sabe a qual profissional pertence")
     void knowsItsProfessional() {
         SalonService service = new SalonService(5L, 10L,
                 new ServiceDetails(GEL, "Gel", null, BodyArea.HANDS, 90, PRICE, true));
@@ -63,6 +68,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Técnica guarda id, nome e se está ativa")
     void procedureTypeKeepsItsData() {
         assertThat(GEL.getId()).isEqualTo(2L);
         assertThat(GEL.getName()).isEqualTo("Esmaltação em gel");
@@ -70,6 +76,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Exige os dados do serviço")
     void requiresDetails() {
         assertThatThrownBy(() -> new SalonService(5L, 10L, null))
                 .isInstanceOf(DomainException.class)
@@ -77,6 +84,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Exige a técnica")
     void requiresProcedureType() {
         assertThatThrownBy(() -> new ServiceDetails(null, "Gel", null, BodyArea.HANDS, 90, PRICE, true))
                 .isInstanceOf(DomainException.class)
@@ -84,6 +92,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Exige o título")
     void requiresTitle() {
         assertThatThrownBy(() -> new ServiceDetails(GEL, "", null, BodyArea.HANDS, 90, PRICE, true))
                 .isInstanceOf(DomainException.class)
@@ -91,6 +100,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Exige a região (mãos, pés ou ambos)")
     void requiresBodyArea() {
         assertThatThrownBy(() -> new ServiceDetails(GEL, "Gel", null, null, 90, PRICE, true))
                 .isInstanceOf(DomainException.class)
@@ -99,6 +109,7 @@ class SalonServiceTest {
 
     @ParameterizedTest
     @ValueSource(ints = {0, -30})
+    @DisplayName("Exige duração maior que zero")
     void requiresPositiveDuration(int minutes) {
         assertThatThrownBy(() -> new ServiceDetails(GEL, "Gel", null, BodyArea.HANDS, minutes, PRICE, true))
                 .isInstanceOf(DomainException.class)
@@ -106,6 +117,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Limita a duração a 24 horas")
     void limitsDurationToOneDay() {
         assertThat(new ServiceDetails(GEL, "Gel", null, BodyArea.HANDS, 1440, PRICE, true).getDurationMinutes())
                 .isEqualTo(ServiceDetails.MAX_DURATION_MINUTES);
@@ -115,6 +127,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Exige o preço")
     void requiresPrice() {
         assertThatThrownBy(() -> new ServiceDetails(GEL, "Gel", null, BodyArea.HANDS, 90, null, true))
                 .isInstanceOf(DomainException.class)
@@ -122,6 +135,7 @@ class SalonServiceTest {
     }
 
     @Test
+    @DisplayName("Técnica exige nome")
     void procedureTypeRequiresName() {
         assertThatThrownBy(() -> new ProcedureType(1L, " ", true))
                 .isInstanceOf(DomainException.class)

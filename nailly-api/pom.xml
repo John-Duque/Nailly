@@ -23,6 +23,9 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <!-- Onde o JaCoCo grava o relatorio de cobertura que o Sonar le -->
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <!-- DTOs da API repetem por natureza os getters/setters do domínio e das entidades.
+             Saem só da detecção de duplicação; continuam analisados para bugs, segurança e cobertura. -->
+        <sonar.cpd.exclusions>**/infra/web/**/*Request.java,**/infra/web/**/*Response.java</sonar.cpd.exclusions>
     </properties>
 
     <dependencies>
@@ -37,6 +40,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- Valida e emite os tokens JWT (Bearer) da API -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
