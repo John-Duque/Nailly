@@ -26,11 +26,11 @@ public final class WorkingPeriod {
     }
 
     boolean overlaps(WorkingPeriod other) {
-        return dayOfWeek == other.dayOfWeek && start.isBefore(other.end) && other.start.isBefore(end);
+        return dayOfWeek.equals(other.dayOfWeek) && start.isBefore(other.end) && other.start.isBefore(end);
     }
 
     boolean contains(DayOfWeek day, LocalTime from, LocalTime to) {
-        return dayOfWeek == day && !from.isBefore(start) && !to.isAfter(end);
+        return dayOfWeek.equals(day) && !from.isBefore(start) && !to.isAfter(end);
     }
 
     public DayOfWeek getDayOfWeek() {
@@ -48,7 +48,7 @@ public final class WorkingPeriod {
     @Override
     public boolean equals(Object other) {
         return this == other || other instanceof WorkingPeriod period
-                && dayOfWeek == period.dayOfWeek && start.equals(period.start) && end.equals(period.end);
+                && dayOfWeek.equals(period.dayOfWeek) && start.equals(period.start) && end.equals(period.end);
     }
 
     @Override

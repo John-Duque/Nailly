@@ -14,7 +14,7 @@ public class User {
     /** O BCrypt só considera os primeiros 72 bytes da senha. */
     public static final int MAX_PASSWORD_BYTES = 72;
 
-    private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+    private static final Pattern EMAIL_FORMAT = Pattern.compile("[^@\\s]+@[^@\\s.]+(\\.[^@\\s.]+)+");
 
     private final Long id;
     private final String email;
@@ -46,7 +46,7 @@ public class User {
     /** E-mail sem espaços e em minúsculas, para o login não depender de maiúsculas. */
     public static String normalizeEmail(String email) {
         String value = DomainValidation.requireText(email, "Informe o e-mail.").toLowerCase(Locale.ROOT);
-        if (!EMAIL.matcher(value).matches()) {
+        if (!EMAIL_FORMAT.matcher(value).matches()) {
             throw new DomainException("E-mail inválido.");
         }
         return value;

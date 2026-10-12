@@ -10,7 +10,7 @@ public final class Address {
     /** Tamanho da cópia do endereço guardada no agendamento (appointments.service_address). */
     public static final int MAX_TEXT_LENGTH = 400;
 
-    private static final Pattern STATE = Pattern.compile("[A-Z]{2}");
+    private static final Pattern STATE_FORMAT = Pattern.compile("[A-Z]{2}");
     private static final Pattern ZIP_CODE = Pattern.compile("\\d{8}");
 
     private final String street;
@@ -34,7 +34,7 @@ public final class Address {
 
     private static String normalizeState(String state) {
         String value = DomainValidation.requireText(state, "Informe a UF.").toUpperCase(Locale.ROOT);
-        if (!STATE.matcher(value).matches()) {
+        if (!STATE_FORMAT.matcher(value).matches()) {
             throw new DomainException("UF inválida.");
         }
         return value;
