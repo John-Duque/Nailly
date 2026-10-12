@@ -31,7 +31,7 @@ public final class HomeVisitPolicy {
                 .sorted(Comparator.comparing(HomeVisitFee::getMaxDistanceKm))
                 .toList();
         for (int i = 1; i < sorted.size(); i++) {
-            if (sorted.get(i).getMaxDistanceKm().equals(sorted.get(i - 1).getMaxDistanceKm())) {
+            if (sorted.get(i).getMaxDistanceKm().compareTo(sorted.get(i - 1).getMaxDistanceKm()) == 0) {
                 throw new DomainException("Há duas faixas de taxa com a mesma distância.");
             }
         }
