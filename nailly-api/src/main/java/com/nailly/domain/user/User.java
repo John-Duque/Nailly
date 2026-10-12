@@ -14,7 +14,7 @@ public class User {
     /** O BCrypt só considera os primeiros 72 bytes da senha. */
     public static final int MAX_PASSWORD_BYTES = 72;
 
-    private static final Pattern EMAIL_FORMAT = Pattern.compile("[^@\\s]+@[^@\\s.]+(\\.[^@\\s.]+)+");
+    private static final Pattern EMAIL_FORMAT = Pattern.compile("[^@\\s]++@[^@\\s.]++\\.[^@\\s]++");
 
     private final Long id;
     private final String email;
