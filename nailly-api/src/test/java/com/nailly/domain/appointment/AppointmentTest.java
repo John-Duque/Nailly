@@ -12,6 +12,7 @@ import com.nailly.domain.salonservice.ServiceDetails;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.GeoPoint;
 import com.nailly.domain.shared.Money;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -68,9 +69,11 @@ class AppointmentTest {
     }
 
     @Nested
+    @DisplayName("Pedido de agendamento")
     class Request {
 
         @Test
+        @DisplayName("Combo soma durações e preços e guarda uma cópia dos serviços")
         void comboAddsDurationsAndPricesAndCopiesServices() {
             Appointment appointment = Appointment.request(CUSTOMER_ID, professional(AUTOMATIC, HOME_VISIT),
                     List.of(service(1L, 60, "50", true), service(2L, 45, "35.50", true)),
@@ -97,6 +100,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Aprovação automática cria o agendamento já confirmado")
         void automaticApprovalIsBornConfirmed() {
             Appointment appointment = confirmed();
 
@@ -106,6 +110,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Aprovação manual cria o pedido pendente com prazo de resposta")
         void manualApprovalIsBornPendingWithDeadline() {
             Appointment appointment = pending();
 
@@ -115,6 +120,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Aprovação manual sem prazo cria pedido que não expira")
         void manualApprovalWithoutDeadlineNeverExpires() {
             ApprovalPolicy noDeadline = new ApprovalPolicy(ApprovalMode.MANUAL, ApprovalMode.MANUAL, null);
 
@@ -125,6 +131,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Prazo de resposta nunca passa do horário marcado")
         void deadlineNeverPassesStartTime() {
             Instant soon = NOW.plusSeconds(600);
 
@@ -135,6 +142,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("No local e a domicílio usam cada um a sua regra de aprovação")
         void eachModeUsesItsOwnApproval() {
             ApprovalPolicy mixed = new ApprovalPolicy(ApprovalMode.AUTOMATIC, ApprovalMode.MANUAL, null);
 
@@ -143,6 +151,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Domicílio cobra a menor faixa de taxa que cobre a distância")
         void homeVisitChargesSmallestBandThatCoversDistance() {
             assertThat(request(AUTOMATIC, homeAt("5.0")).getHomeVisitFee()).isEqualTo(Money.of("10"));
 
@@ -153,6 +162,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa domicílio além da última faixa de distância")
         void homeVisitBeyondLastBandIsRefused() {
             ServiceLocation farAway = homeAt("10.1");
 
@@ -162,6 +172,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa domicílio se a profissional não atende a domicílio")
         void homeVisitRequiresProfessionalToOfferIt() {
             Professional professional = professional(AUTOMATIC, HomeVisitPolicy.notOffered());
             List<SalonService> services = List.of(service(1L, 60, "50", true));
@@ -173,6 +184,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa domicílio se algum serviço não é feito a domicílio")
         void homeVisitRequiresEveryServiceAvailableAtHome() {
             Professional professional = professional(AUTOMATIC, HOME_VISIT);
             List<SalonService> services = List.of(service(1L, 60, "50", true), service(2L, 30, "20", false));
@@ -184,6 +196,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Serviço que não é feito a domicílio pode ser agendado no local")
         void serviceNotAvailableAtHomeCanBeBookedAtLocation() {
             Appointment appointment = Appointment.request(CUSTOMER_ID, professional(AUTOMATIC, HOME_VISIT),
                     List.of(service(1L, 60, "50", false)), START, SALON, null, NOW);
@@ -192,6 +205,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Exige ao menos um serviço")
         void requiresAtLeastOneService() {
             Professional professional = professional(AUTOMATIC, HOME_VISIT);
             List<SalonService> none = List.of();
@@ -202,6 +216,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Exige que todos os serviços sejam da mesma profissional")
         void requiresServicesFromSameProfessional() {
             Professional professional = professional(AUTOMATIC, HOME_VISIT);
             SalonService otherProfessionals = new SalonService(9L, 99L,
@@ -214,6 +229,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa serviço desativado")
         void rejectsInactiveService() {
             Professional professional = professional(AUTOMATIC, HOME_VISIT);
             SalonService inactive = service(1L, 60, "50", true);
@@ -226,6 +242,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa o mesmo serviço escolhido duas vezes")
         void rejectsRepeatedService() {
             Professional professional = professional(AUTOMATIC, HOME_VISIT);
             List<SalonService> services = List.of(service(1L, 60, "50", true), service(1L, 60, "50", true));
@@ -236,6 +253,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa profissional desativada")
         void rejectsInactiveProfessional() {
             Professional professional = professional(AUTOMATIC, HOME_VISIT);
             professional.deactivate();
@@ -247,6 +265,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa horário que não está no futuro")
         void rejectsStartTimeNotInFuture() {
             Professional professional = professional(AUTOMATIC, HOME_VISIT);
             List<SalonService> services = List.of(service(1L, 60, "50", true));
@@ -258,9 +277,11 @@ class AppointmentTest {
     }
 
     @Nested
+    @DisplayName("Resposta da profissional ao pedido")
     class Decision {
 
         @Test
+        @DisplayName("Confirma pedido pendente e registra quando decidiu")
         void confirmsPendingRequest() {
             Appointment appointment = pending();
             Instant decidedAt = NOW.plusSeconds(60);
@@ -272,6 +293,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não confirma depois do prazo de resposta")
         void cannotConfirmAfterDeadline() {
             Appointment appointment = pending();
             Instant deadline = appointment.getExpiresAt();
@@ -282,6 +304,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não confirma um agendamento já confirmado")
         void cannotConfirmTwice() {
             Appointment appointment = confirmed();
 
@@ -291,6 +314,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Recusa pedido pendente guardando o motivo")
         void rejectsPendingRequestWithReason() {
             Appointment appointment = pending();
 
@@ -302,6 +326,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não recusa um agendamento já confirmado")
         void cannotRejectConfirmedAppointment() {
             Appointment appointment = confirmed();
 
@@ -311,6 +336,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Expira quando o prazo de resposta acaba")
         void expiresWhenDeadlinePasses() {
             Appointment appointment = pending();
             Instant deadline = appointment.getExpiresAt();
@@ -325,6 +351,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não expira antes do prazo")
         void cannotExpireBeforeDeadline() {
             Appointment appointment = pending();
 
@@ -334,6 +361,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Pedido sem prazo nunca expira")
         void requestWithoutDeadlineNeverExpires() {
             Appointment appointment = request(new ApprovalPolicy(ApprovalMode.MANUAL, ApprovalMode.MANUAL, null), SALON);
             Instant later = START.plusSeconds(86_400);
@@ -343,6 +371,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não expira um agendamento confirmado")
         void cannotExpireConfirmedAppointment() {
             Appointment appointment = confirmed();
 
@@ -353,9 +382,11 @@ class AppointmentTest {
     }
 
     @Nested
+    @DisplayName("Cancelamento")
     class Cancellation {
 
         @Test
+        @DisplayName("Cancela antes do horário guardando o motivo e a data")
         void cancelsBeforeStartTime() {
             Appointment appointment = confirmed();
             Instant canceledAt = START.minusSeconds(1);
@@ -368,6 +399,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Pedido pendente também pode ser cancelado")
         void pendingRequestCanBeCanceled() {
             Appointment appointment = pending();
 
@@ -377,6 +409,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não cancela depois do horário marcado")
         void cannotCancelAfterStartTime() {
             Appointment appointment = confirmed();
 
@@ -386,6 +419,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não cancela agendamento já concluído")
         void cannotCancelFinishedAppointment() {
             Appointment appointment = confirmed();
             appointment.complete(START);
@@ -397,9 +431,11 @@ class AppointmentTest {
     }
 
     @Nested
+    @DisplayName("Conclusão do atendimento")
     class Attendance {
 
         @Test
+        @DisplayName("Conclui o atendimento a partir do horário marcado")
         void completesAfterStartTime() {
             Appointment appointment = confirmed();
 
@@ -409,6 +445,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Marca falta da cliente depois do horário marcado")
         void marksNoShowAfterStartTime() {
             Appointment appointment = confirmed();
 
@@ -418,6 +455,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não finaliza antes do horário marcado")
         void cannotFinishBeforeStartTime() {
             Appointment appointment = confirmed();
             Instant beforeStart = START.minusSeconds(1);
@@ -428,6 +466,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Não finaliza pedido que ainda está pendente")
         void cannotFinishPendingRequest() {
             Appointment appointment = pending();
 
@@ -438,9 +477,11 @@ class AppointmentTest {
     }
 
     @Nested
+    @DisplayName("Ocupação da agenda")
     class Schedule {
 
         @Test
+        @DisplayName("Só há conflito quando os horários se sobrepõem")
         void conflictsOnlyWhenIntervalsOverlap() {
             Appointment appointment = confirmed();
             Instant end = appointment.getEndAt();
@@ -452,6 +493,7 @@ class AppointmentTest {
         }
 
         @Test
+        @DisplayName("Só pendente e confirmado ocupam a agenda")
         void onlyPendingAndConfirmedOccupySchedule() {
             assertThat(AppointmentStatus.values())
                     .filteredOn(AppointmentStatus::occupiesSchedule)
@@ -465,6 +507,7 @@ class AppointmentTest {
     }
 
     @Test
+    @DisplayName("Builder reconstrói um agendamento gravado com todos os dados")
     void builderRestoresStoredData() {
         Appointment appointment = Appointment.builder()
                 .id(50L)
@@ -498,6 +541,7 @@ class AppointmentTest {
     }
 
     @Test
+    @DisplayName("Builder exige os campos principais")
     void builderRequiresMainFields() {
         Appointment.Builder withoutLocation = Appointment.builder()
                 .startAt(START).endAt(START.plusSeconds(60)).status(AppointmentStatus.PENDING);

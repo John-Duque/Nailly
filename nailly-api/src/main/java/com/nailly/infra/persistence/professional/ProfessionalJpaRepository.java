@@ -15,5 +15,5 @@ public interface ProfessionalJpaRepository extends JpaRepository<ProfessionalEnt
     @Query("select p from ProfessionalEntity p where p.id = :id")
     Optional<ProfessionalEntity> findByIdForUpdate(@Param("id") long id);
 
-    boolean existsByUserId(long userId);
+    Optional<ProfessionalEntity> findByUserId(long userId);
 }

@@ -1,6 +1,7 @@
 package com.nailly.domain.appointment;
 
 import com.nailly.domain.shared.DomainException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ServiceLocationTest {
 
     @Test
+    @DisplayName("No local guarda o local e o endereço sem espaços extras")
     void atLocationKeepsLocationAndAddress() {
         ServiceLocation location = ServiceLocation.atLocation(3L, " Rua A, 10 ");
 
@@ -21,6 +23,7 @@ class ServiceLocationTest {
     }
 
     @Test
+    @DisplayName("A domicílio guarda o endereço da cliente e normaliza a distância")
     void homeVisitNormalizesDistance() {
         ServiceLocation location = ServiceLocation.homeVisit(4L, "Rua B, 20", new BigDecimal("7"));
 
@@ -30,6 +33,7 @@ class ServiceLocationTest {
     }
 
     @Test
+    @DisplayName("Exige o endereço do atendimento")
     void requiresAddress() {
         assertThatThrownBy(() -> ServiceLocation.atLocation(3L, " "))
                 .isInstanceOf(DomainException.class)
@@ -37,6 +41,7 @@ class ServiceLocationTest {
     }
 
     @Test
+    @DisplayName("No local exige o local da profissional")
     void atLocationRequiresLocationId() {
         assertThatThrownBy(() -> new ServiceLocation(ServiceMode.AT_LOCATION, null, null, "Rua A", null))
                 .isInstanceOf(DomainException.class)
@@ -44,6 +49,7 @@ class ServiceLocationTest {
     }
 
     @Test
+    @DisplayName("A domicílio exige o endereço da cliente")
     void homeVisitRequiresCustomerAddress() {
         BigDecimal distance = BigDecimal.ONE;
 
@@ -53,6 +59,7 @@ class ServiceLocationTest {
     }
 
     @Test
+    @DisplayName("A domicílio exige distância válida com até uma casa decimal")
     void homeVisitRequiresValidDistance() {
         BigDecimal negative = new BigDecimal("-1");
         BigDecimal tooPrecise = new BigDecimal("1.25");

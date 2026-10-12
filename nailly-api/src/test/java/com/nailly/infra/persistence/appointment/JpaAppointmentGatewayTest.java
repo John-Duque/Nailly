@@ -16,14 +16,18 @@ import com.nailly.domain.salonservice.SalonServiceGateway;
 import com.nailly.domain.salonservice.ServiceDetails;
 import com.nailly.domain.shared.Money;
 import com.nailly.domain.shared.NotFoundException;
+import com.nailly.infra.persistence.professional.JpaProfessionalGateway;
+import com.nailly.infra.persistence.salonservice.JpaSalonServiceGateway;
 import com.nailly.infra.persistence.salonservice.ProcedureTypeEntity;
 import com.nailly.infra.persistence.salonservice.ProcedureTypeJpaRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -39,8 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
+@ActiveProfiles("test")
+@Import({JpaAppointmentGateway.class, JpaProfessionalGateway.class, JpaSalonServiceGateway.class})
 class JpaAppointmentGatewayTest {
 
     private static final Instant NOW = Instant.parse("2026-10-12T12:00:00Z");
@@ -93,6 +98,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Grava e lê agendamento com os itens")
     void savesAndLoadsAppointmentWithItems() {
         Appointment saved = confirmedAtSalon();
 
@@ -123,6 +129,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Grava agendamento a domicílio com distância e taxa")
     void savesHomeVisit() {
         ServiceLocation home = ServiceLocation.homeVisit(CUSTOMER_ADDRESS_ID, "Rua B, 20", new BigDecimal("7.2"));
         Appointment saved = gateway.save(Appointment.request(CUSTOMER_ID, automatic, combo, START, home, null, NOW));
@@ -137,6 +144,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Atualiza status, motivo e data da decisão")
     void updatesStatusFields() {
         Appointment pending = pendingForManual();
         Instant decidedAt = NOW.plusSeconds(60);
@@ -153,6 +161,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Grava o cancelamento")
     void savesCancellation() {
         Appointment appointment = confirmedAtSalon();
         appointment.cancel("Imprevisto", NOW.plusSeconds(120));
@@ -165,6 +174,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Agendamento confirmado ocupa horários sobrepostos")
     void confirmedAppointmentOccupiesOverlappingTime() {
         confirmedAtSalon();
         entityManager.flush();
@@ -180,6 +190,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Pedido pendente só ocupa a agenda dentro do prazo")
     void pendingOccupiesOnlyWhileWithinDeadline() {
         Appointment pending = pendingForManual();
         entityManager.flush();
@@ -190,6 +201,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Agendamento cancelado libera o horário")
     void canceledAppointmentFreesTime() {
         Appointment appointment = confirmedAtSalon();
         appointment.cancel(null, NOW);
@@ -200,6 +212,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Encontra pedidos pendentes fora do prazo")
     void findsPendingRequestsPastDeadline() {
         Appointment pending = pendingForManual();
         confirmedAtSalon();
@@ -212,6 +225,7 @@ class JpaAppointmentGatewayTest {
     }
 
     @Test
+    @DisplayName("Agendamento inexistente não é encontrado nem salvo")
     void unknownAppointmentIsEmptyAndCannotBeSaved() {
         Appointment ghost = Appointment.builder()
                 .id(Long.MAX_VALUE)
@@ -225,5 +239,25 @@ class JpaAppointmentGatewayTest {
         assertThatThrownBy(() -> gateway.save(ghost))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Agendamento não encontrado.");
+    }
+
+    @Test
+    @DisplayName("Lista agendamentos que tocam o período, de qualquer status")
+    void listsAppointmentsTouchingThePeriod() {
+        Appointment appointment = confirmedAtSalon();
+        appointment.cancel(null, NOW);
+        gateway.save(appointment);
+        Appointment pending = pendingForManual();
+        entityManager.flush();
+
+        assertThat(gateway.findByProfessionalBetween(automatic.getId(), START.minusSeconds(60), START.plusSeconds(60)))
+                .extracting(Appointment::getId, Appointment::getStatus)
+                .containsExactly(tuple(appointment.getId(), AppointmentStatus.CANCELED));
+        assertThat(gateway.findByProfessionalBetween(automatic.getId(), END, END.plusSeconds(3600))).isEmpty();
+        assertThat(gateway.findByProfessionalBetween(automatic.getId(), START.minusSeconds(3600), START)).isEmpty();
+        assertThat(gateway.findByCustomerBetween(CUSTOMER_ID, START, END))
+                .extracting(Appointment::getId)
+                .containsExactlyInAnyOrder(appointment.getId(), pending.getId());
+        assertThat(gateway.findByCustomerBetween(Long.MAX_VALUE, START, END)).isEmpty();
     }
 }

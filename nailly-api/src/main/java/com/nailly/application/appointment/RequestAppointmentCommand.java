@@ -1,7 +1,6 @@
 package com.nailly.application.appointment;
 
 import com.nailly.domain.appointment.ServiceMode;
-import com.nailly.domain.shared.GeoPoint;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,8 +15,6 @@ public final class RequestAppointmentCommand {
     private final ServiceMode mode;
     private final Long locationId;
     private final Long customerAddressId;
-    private final String address;
-    private final GeoPoint destination;
     private final String notes;
 
     private RequestAppointmentCommand(Builder builder) {
@@ -28,8 +25,6 @@ public final class RequestAppointmentCommand {
         this.mode = builder.mode;
         this.locationId = builder.locationId;
         this.customerAddressId = builder.customerAddressId;
-        this.address = builder.address;
-        this.destination = builder.destination;
         this.notes = builder.notes;
     }
 
@@ -63,19 +58,9 @@ public final class RequestAppointmentCommand {
         return locationId;
     }
 
-    /** Endereço da cliente (HOME_VISIT). */
+    /** Endereço cadastrado da cliente (HOME_VISIT). */
     public Long getCustomerAddressId() {
         return customerAddressId;
-    }
-
-    /** Endereço do atendimento em texto, guardado como histórico. */
-    public String getAddress() {
-        return address;
-    }
-
-    /** Coordenadas da cliente, usadas para calcular a distância (HOME_VISIT). */
-    public GeoPoint getDestination() {
-        return destination;
     }
 
     public String getNotes() {
@@ -91,8 +76,6 @@ public final class RequestAppointmentCommand {
         private ServiceMode mode;
         private Long locationId;
         private Long customerAddressId;
-        private String address;
-        private GeoPoint destination;
         private String notes;
 
         private Builder() {
@@ -118,20 +101,17 @@ public final class RequestAppointmentCommand {
             return this;
         }
 
-        /** Atendimento no local da profissional. */
-        public Builder atLocation(Long locationId, String address) {
+        /** Atendimento num local da profissional. */
+        public Builder atLocation(Long locationId) {
             this.mode = ServiceMode.AT_LOCATION;
             this.locationId = locationId;
-            this.address = address;
             return this;
         }
 
-        /** Atendimento na casa da cliente. */
-        public Builder homeVisit(Long customerAddressId, String address, GeoPoint destination) {
+        /** Atendimento num endereço cadastrado da cliente. */
+        public Builder homeVisit(Long customerAddressId) {
             this.mode = ServiceMode.HOME_VISIT;
             this.customerAddressId = customerAddressId;
-            this.address = address;
-            this.destination = destination;
             return this;
         }
 
