@@ -1,12 +1,22 @@
 spring:
   application:
-    name: nailly
+    name: nailly-api
 
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL
-    driver-class-name: org.h2.Driver
-    jpa:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # O schema é criado pelo Flyway; o Hibernate só confere se as entidades batem com ele.
+      ddl-auto: validate
+    properties:
       hibernate:
-        ddl-auto: create-drop
-    flyway:
-      enabled: false
+        jdbc:
+          # Datas e horas de agendamento são gravadas em UTC.
+          time_zone: UTC
+
+  flyway:
+    enabled: true
