@@ -4,14 +4,18 @@ import com.nailly.domain.appointment.Appointment;
 import com.nailly.domain.appointment.AppointmentGateway;
 import com.nailly.domain.appointment.ServiceLocation;
 import com.nailly.domain.appointment.ServiceMode;
+import com.nailly.domain.customer.CustomerAddress;
+import com.nailly.domain.customer.CustomerAddressGateway;
 import com.nailly.domain.professional.Professional;
 import com.nailly.domain.professional.ProfessionalGateway;
+import com.nailly.domain.professional.ProfessionalLocation;
+import com.nailly.domain.professional.ProfessionalLocationGateway;
+import com.nailly.domain.professional.WorkingHoursGateway;
 import com.nailly.domain.salonservice.SalonService;
 import com.nailly.domain.salonservice.SalonServiceGateway;
 import com.nailly.domain.shared.DomainException;
 import com.nailly.domain.shared.NotFoundException;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -21,23 +25,32 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Cliente pede um agendamento. Deve rodar numa transação: a profissional fica travada
- * do início ao fim, para que dois pedidos simultâneos não ocupem o mesmo horário.
+ * Cliente pede um agendamento. Roda numa transação: a profissional fica travada do início
+ * ao fim, para que dois pedidos simultâneos não ocupem o mesmo horário.
  */
 public class RequestAppointmentUseCase {
 
     private final AppointmentGateway appointmentGateway;
     private final ProfessionalGateway professionalGateway;
     private final SalonServiceGateway salonServiceGateway;
+    private final ProfessionalLocationGateway locationGateway;
+    private final CustomerAddressGateway customerAddressGateway;
+    private final WorkingHoursGateway workingHoursGateway;
     private final Clock clock;
 
     public RequestAppointmentUseCase(AppointmentGateway appointmentGateway,
                                      ProfessionalGateway professionalGateway,
                                      SalonServiceGateway salonServiceGateway,
+                                     ProfessionalLocationGateway locationGateway,
+                                     CustomerAddressGateway customerAddressGateway,
+                                     WorkingHoursGateway workingHoursGateway,
                                      Clock clock) {
         this.appointmentGateway = appointmentGateway;
         this.professionalGateway = professionalGateway;
         this.salonServiceGateway = salonServiceGateway;
+        this.locationGateway = locationGateway;
+        this.customerAddressGateway = customerAddressGateway;
+        this.workingHoursGateway = workingHoursGateway;
         this.clock = clock;
     }
 
@@ -50,6 +63,10 @@ public class RequestAppointmentUseCase {
                 loadServices(command.getServiceIds()), command.getStartAt(),
                 toLocation(command, professional), command.getNotes(), now);
 
+        if (!workingHoursGateway.find(professional.getId(), appointment.getLocation().getLocationId())
+                .covers(appointment.getStartAt(), appointment.getEndAt())) {
+            throw new DomainException("O horário escolhido está fora do horário de atendimento.");
+        }
         if (appointmentGateway.existsOccupyingSchedule(appointment.getProfessionalId(),
                 appointment.getStartAt(), appointment.getEndAt(), now)) {
             throw new DomainException("Este horário não está mais disponível.");
@@ -67,19 +84,35 @@ public class RequestAppointmentUseCase {
                 .toList();
     }
 
-    private static ServiceLocation toLocation(RequestAppointmentCommand command, Professional professional) {
+    private ServiceLocation toLocation(RequestAppointmentCommand command, Professional professional) {
         if (command.getMode() == null) {
             throw new DomainException("Informe se o atendimento é no local ou a domicílio.");
         }
-        if (command.getMode() == ServiceMode.AT_LOCATION) {
-            return new ServiceLocation(ServiceMode.AT_LOCATION, command.getLocationId(), null,
-                    command.getAddress(), null);
+        return command.getMode() == ServiceMode.AT_LOCATION
+                ? atProfessionalLocation(command.getLocationId(), professional)
+                : atCustomerAddress(command.getCustomerAddressId(), command.getCustomerId(), professional);
+    }
+
+    private ServiceLocation atProfessionalLocation(Long locationId, Professional professional) {
+        if (locationId == null) {
+            throw new DomainException("Informe o local do atendimento.");
         }
-        if (command.getDestination() == null) {
-            throw new DomainException("Informe a localização do endereço da cliente.");
+        ProfessionalLocation location = locationGateway.getByIdAndProfessional(locationId, professional.getId());
+        if (!location.isActive()) {
+            throw new DomainException("Este local não está mais disponível.");
         }
-        BigDecimal distanceKm = professional.getHomeVisitPolicy().distanceKmTo(command.getDestination());
-        return new ServiceLocation(ServiceMode.HOME_VISIT, null, command.getCustomerAddressId(),
-                command.getAddress(), distanceKm);
+        return ServiceLocation.atLocation(location.getId(), location.getPlace().getAddress().format());
+    }
+
+    private ServiceLocation atCustomerAddress(Long addressId, long customerId, Professional professional) {
+        if (addressId == null) {
+            throw new DomainException("Informe o endereço da cliente.");
+        }
+        CustomerAddress address = customerAddressGateway.getByIdAndCustomer(addressId, customerId);
+        if (!address.isActive()) {
+            throw new DomainException("Este endereço foi removido.");
+        }
+        return ServiceLocation.homeVisit(address.getId(), address.getPlace().getAddress().format(),
+                professional.getHomeVisitPolicy().distanceKmTo(address.requireLocation()));
     }
 }
