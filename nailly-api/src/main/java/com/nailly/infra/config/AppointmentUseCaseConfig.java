@@ -5,11 +5,16 @@ import com.nailly.application.appointment.CompleteAppointmentUseCase;
 import com.nailly.application.appointment.ConfirmAppointmentUseCase;
 import com.nailly.application.appointment.ExpirePendingAppointmentsUseCase;
 import com.nailly.application.appointment.GetAppointmentUseCase;
+import com.nailly.application.appointment.ListCustomerAppointmentsUseCase;
+import com.nailly.application.appointment.ListProfessionalAgendaUseCase;
 import com.nailly.application.appointment.MarkAppointmentNoShowUseCase;
 import com.nailly.application.appointment.RejectAppointmentUseCase;
 import com.nailly.application.appointment.RequestAppointmentUseCase;
 import com.nailly.domain.appointment.AppointmentGateway;
+import com.nailly.domain.customer.CustomerAddressGateway;
 import com.nailly.domain.professional.ProfessionalGateway;
+import com.nailly.domain.professional.ProfessionalLocationGateway;
+import com.nailly.domain.professional.WorkingHoursGateway;
 import com.nailly.domain.salonservice.SalonServiceGateway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,13 +29,27 @@ public class AppointmentUseCaseConfig {
     public RequestAppointmentUseCase requestAppointmentUseCase(AppointmentGateway appointmentGateway,
                                                                ProfessionalGateway professionalGateway,
                                                                SalonServiceGateway salonServiceGateway,
+                                                               ProfessionalLocationGateway locationGateway,
+                                                               CustomerAddressGateway customerAddressGateway,
+                                                               WorkingHoursGateway workingHoursGateway,
                                                                Clock clock) {
-        return new RequestAppointmentUseCase(appointmentGateway, professionalGateway, salonServiceGateway, clock);
+        return new RequestAppointmentUseCase(appointmentGateway, professionalGateway, salonServiceGateway,
+                locationGateway, customerAddressGateway, workingHoursGateway, clock);
     }
 
     @Bean
     public GetAppointmentUseCase getAppointmentUseCase(AppointmentGateway appointmentGateway) {
         return new GetAppointmentUseCase(appointmentGateway);
+    }
+
+    @Bean
+    public ListProfessionalAgendaUseCase listProfessionalAgendaUseCase(AppointmentGateway appointmentGateway) {
+        return new ListProfessionalAgendaUseCase(appointmentGateway);
+    }
+
+    @Bean
+    public ListCustomerAppointmentsUseCase listCustomerAppointmentsUseCase(AppointmentGateway appointmentGateway) {
+        return new ListCustomerAppointmentsUseCase(appointmentGateway);
     }
 
     @Bean
